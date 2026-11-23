@@ -433,9 +433,11 @@ for (const width of [208, 256]) {
   assert.deepEqual([...f.state["t3.pins"]], ["vps/t2"], "pin acts on the selected remote button");
   const header = f.load("t3-chrome").render(cx);
   // The toggle first, where it stays with the sidebar hidden, then Herdr's tile and name (brand.js), as T3's SidebarBrand; only
-  // here: the hidden sidebar's row keeps the toggle alone. The mode switch is a setting and ⌘⇧L, not a button here.
-  assert.deepEqual(header.items.map(n => n.key).filter(k => typeof k === "string"), ["tip-sidebar-toggle", "home"], "the header holds the toggle, then Herdr's tile and name (Home, no tooltip); search is a shortcut");
-  assert.equal(find(header, "sidebar-mode"), null, "no mode button");
+  // here: the hidden sidebar's row keeps the toggle alone. The mode switch ends the row.
+  assert.deepEqual(header.items.map(n => n.key).filter(k => typeof k === "string"), ["tip-sidebar-toggle", "home", "tip-sidebar-mode"], "the header holds the toggle, then Herdr's tile and name (Home, no tooltip), then the mode switch; search is a shortcut");
+  assert.equal(find(header, "sidebar-mode").style.accessibility_label, "Show inbox", "with Lists shown, it offers the Inbox");
+  fire(find(header, "sidebar-mode"), "on_click", {}, cx);
+  assert.deepEqual(f.calls.pop(), ["t3-tabs.sidebar", {}]);
   assert.ok(walk(find(header, "home")).some(n => n.kind === "image" && n.source === "frame/welcome/herdr.png") && strings(find(header, "home")).includes("Herdr"), "Herdr's tile and name");
   const after = header.items[header.items.findIndex(n => n.key === "tip-sidebar-toggle") + 1];
   assert.deepEqual([header.style.pl, header.style.pr, find(header, "sidebar-toggle").style.h, find(header, "sidebar-toggle").style.w, find(header, "sidebar-toggle").style.rounded, after.style.w], [8, 8, 28, 28, 8, 8], "8 in with no window buttons of the layout's; T3's 28px toggle, the brand 8 after it, the sidebar's one gap between icons");
@@ -445,13 +447,13 @@ for (const width of [208, 256]) {
   assert.deepEqual(f.calls.pop(), ["t3-tabs.home", {}]);
   {
     // Short of room the name goes whole, never cut to "Her…"; the tile stays and still goes Home. 8 in and 8 at the right, the
-    // toggle's 28 and 8 after it, the button's 16 + 4, 40 of name.
+    // toggle's 28 and 8 after it, the button's 16 + 4, 40 of name, the mode switch's 28.
     const brand = f.load("t3-chrome"), named = () => strings(find(brand.render(cx), "home")).includes("Herdr");
     fire(find(brand.render(cx), "home-name"), "on_size_change", { width: 40 }, cx);
-    fire(brand.render(cx), "on_size_change", { width: 111 }, cx);
+    fire(brand.render(cx), "on_size_change", { width: 139 }, cx);
     assert.ok(!named(), "no room, no name");
-    assert.ok(find(brand.render(cx), "home") && find(brand.render(cx), "sidebar-toggle"), "the tile and the toggle stay");
-    fire(brand.render(cx), "on_size_change", { width: 112 }, cx);
+    assert.ok(find(brand.render(cx), "home") && find(brand.render(cx), "sidebar-toggle") && find(brand.render(cx), "sidebar-mode"), "the tile and the buttons stay");
+    fire(brand.render(cx), "on_size_change", { width: 140 }, cx);
     assert.ok(named(), "room for it whole, the name");
   }
   const footer = f.load("t3-chrome", { footer: true });
@@ -585,6 +587,36 @@ for (const width of [208, 256]) {
   fire(find(menu.render(cx), "sort-priority"), "on_hover", false, cx);
   assert.equal(sortLit(), undefined, "the pointer gone, nothing stays lit");
   assert.equal(find(f.load("t3-spaces").render(cx), "spaces-heading").items[0].style.text_color, f.theme().muted);
+}
+
+{
+  // Show agents on: the list, its groups and the published walk follow the machine; pins still see every agent.
+  const f = fixture(256), ag = f.load("t3-agents");
+  f.state["t3.pins"] = ["t0"];
+  fire(find(ag.render(cx), "ag-machine"), "on_click", {}, cx);
+  const opened = plain(f.overlays.pop().props);
+  assert.deepEqual([opened.machineMenu, opened.machine], [true, null], "the menu is told the choice: its own copy has other storage");
+  // The popup: a copy sharing the module, with its own props (and, in Herdr, its own localStorage, so it writes none).
+  const ctx = f.scopes.get("t3-agents"), was = ctx.props, menuProps = { ...opened, overlay: "o" };
+  ctx.props = () => menuProps;
+  const menu = f.also("t3-agents", menuProps), drawn = () => menu.render(cx);
+  assert.deepEqual(["machine-all", "machine-", "machine-vps"].map(id => strings(find(drawn(), id))[0]), ["All machines", "This computer", "vps"]);
+  assert.ok(walk(find(drawn(), "machine-all")).some(n => n.source === "mods/t3-agents/icons/check.svg"), "all, checked");
+  fire(find(drawn(), "machine-vps"), "on_click", {}, cx);
+  ctx.props = was;
+  assert.deepEqual([f.closed.pop(), f.stores.get("t3-agents").get("machine")], ["o", undefined], "the menu closes and stores nothing itself");
+  let at = ag.render(cx);
+  assert.equal(f.stores.get("t3-agents").get("machine"), '"vps"', "the list keeps the pick in its storage");
+  assert.deepEqual([Boolean(find(at, "ag-vps/t2")), find(at, "ag-t0"), find(at, "pinned")], [true, null, null], "only vps's agents, and t0's pin is out of view");
+  assert.deepEqual(plain(f.state["t3-agents.rows"].order), ["vps/t2"], "the keyboard walks what's shown");
+  assert.deepEqual(plain(f.state["t3.pins"]), ["t0"], "the hidden agent keeps its pin");
+  assert.equal(find(at, "ag-machine").style.accessibility_label, "Show agents on: vps");
+  f.stores.get("t3-agents").set("machine", '"gone"');
+  at = ag.render(cx);
+  assert.ok(find(at, "ag-t0") && find(at, "ag-vps/t2"), "a machine not listed reads as all");
+  assert.equal(find(at, "ag-machine").style.accessibility_label, "Show agents on");
+  f.stores.get("t3-agents").set("machine", '""');
+  assert.deepEqual(plain(ag.compute().list.map(a => a.address)), ["t0"], "this computer's only");
 }
 
 {

@@ -17,7 +17,7 @@ I'd worked this way in T3 Code: what's running stays out of sight, what needs me
 ## Features
 
 - **Inbox search** shows matching agents in a compact list. Use ↑ and ↓ to choose a result and Enter to open it.
-- **Inbox and Lists**: two sidebars, switched with `cmd-shift-l` or in Layout Settings. Inbox sorts agents by attention, with Settle, Snooze and Mark unread (putting an idle agent back to Done from its menu). **Settled** holds put-away agents, and **Filter by space** lists only spaces with Inbox entries or spaces already selected. Lists shows spaces and their agents.
+- **Inbox and Lists**: two sidebars, switched with the brand bar's mode button, `cmd-shift-l` or Layout Settings. Inbox sorts agents by attention, with Settle, Snooze and Mark unread (putting an idle agent back to Done from its menu). **Settled** holds put-away agents, and **Filter by space** lists only spaces with Inbox entries or spaces already selected. Lists shows spaces and their agents, on every machine or only one.
 - **Switching spaces** brings the destination tab bar, terminal and saved right panel into view together, including when returning from Home.
 - **Home**: putting away the agent you're looking at lands on a quiet page, not the next card. What to look at next is yours to pick. Settings (`cmd-shift-,`) can make it go on to the next card instead, or make Home a terminal or a mod of your own.
 - **One name, one set of marks**: cards, lists, tabs and pane headers name each terminal the same way, and cards, lists and tabs share one set of status marks.

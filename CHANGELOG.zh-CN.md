@@ -4,6 +4,8 @@
 
 ## 2026-11-23
 
+- 连接了其他机器时，Lists 里 Agents 标题行的排序左边多了筛选按钮：**Show agents on** 全部机器（All machines）、本机（This computer）或某台机器。筛选后按钮用强调色显示机器名，分组、数量和 `cmd-]`／`cmd-[` 只算这台机器的 agent。机器离线或被移除时显示全部 agent，等它回来再恢复，选择会保留。
+- 品牌栏右端的 Show lists／Show inbox 按钮回来了：点它在 Lists 和 Inbox 之间切换侧栏。`cmd-shift-l` 和设置 → Sidebar → Sidebar shows 照样能用。侧栏窄时先让出 `Herdr`，按钮留着。
 - 移除窗格标题栏（`t3-pane`）右端的状态标记（`working`／`blocked`／`done` 以及 Inbox 下的 `Settled` 勾、`Snoozed` 闹钟与倒计时定时器），不再与侧栏和标签栏重复显示状态。子 agent 按钮保留，并在任意后代工作中时直接显示工作标记。
 
 - 统一 Inbox 与标签栏的 Undo 提示和撤销队列（`shared/notice.js`）：通过卡片按钮、菜单和快捷键连续执行 Settle／Snooze／Unpin 现可合并为同一条 Undo 提示，侧栏隐藏或切到 Lists 时按 `cmd-shift-z` 立即撤销不再有 1 秒延迟，撤销写入失败会保留提示以供重试，且临时撤销快照不再写入持久化的 `t3.notice`。
