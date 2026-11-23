@@ -211,9 +211,8 @@ for (const id of ["settings", "t3-settings"]) assert.equal(click(root, id).style
 assert.deepEqual(calls.splice(0).map(c => c[0]), ["app.settings", "t3-tabs.settings"]);
 part = {};
 root = chrome.render();
-assert.equal(find(root, "sidebar-mode"), null, "the mode is a setting and ⌘⇧L, not a brand-bar button");
-assert.equal(click(root, "sidebar-toggle").style.h, 28);
-assert.deepEqual(calls.splice(0).map(c => c[0]), ["t3-tabs.toggle-sidebar"]);
+for (const id of ["sidebar-toggle", "sidebar-mode"]) assert.equal(click(root, id).style.h, 28);
+assert.deepEqual(calls.splice(0).map(c => c[0]), ["t3-tabs.toggle-sidebar", "t3-tabs.sidebar"]);
 part = { part: "panel" };
 root = chrome.render();
 for (const id of ["panel-wide", "panel-close"]) assert.equal(click(root, id).style.h, 28);

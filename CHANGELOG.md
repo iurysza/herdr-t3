@@ -4,6 +4,7 @@ English · [中文](CHANGELOG.zh-CN.md)
 
 ## 2026-11-23
 
+- The brand bar's Show lists / Show inbox button is back at its right end: click it to switch the sidebar between Lists and Inbox. `cmd-shift-l` and Settings → Sidebar → Sidebar shows still work. In a narrow sidebar `Herdr` gives way before the button does.
 - Removed the right-end status mark (`working`, `blocked`, `done`, and Inbox `Settled` / `Snoozed` marks plus their snooze countdown timer) from pane headers (`t3-pane`); status stays in the sidebar and tabs. The sub-agent button remains and shows the working mark whenever any descendant is working.
 
 - Unified Undo notices across Inbox and the tab bar (`shared/notice.js`): consecutive Settle/Snooze/Unpin actions across card buttons, menus and shortcuts now batch into one Undo notice, `cmd-shift-z` responds immediately even when the sidebar is hidden or in Lists, failed Undo writes restore the notice for retry, and ephemeral undo callbacks are no longer persisted into `t3.notice`.

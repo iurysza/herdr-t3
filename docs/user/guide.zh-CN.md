@@ -48,7 +48,7 @@
 
 Insert 拒绝包含控制字符的路径；可改用 Copy path。
 
-- **侧栏**：`cmd-shift-l` 或设置里的 Sidebar shows 切 Lists 和 Inbox；侧栏隐藏时只有设置能切，和 T3 一样，这时侧栏快捷键不起作用。窗口按钮后面的按钮或 `cmd-b` 隐藏侧栏；隐藏后这个按钮留在原处，点它把侧栏找回来；和 T3 一样，旁边不再放别的，回 Home 用 `cmd-shift-h`。隐藏期间，不管在 Home 还是别处，布局都不显示 agent 在做什么：有 agent 需要你时，Herdr 自己的通知照样会告诉你；把侧栏找回来就能看到全部。`cmd-shift-b` 打开详情。
+- **侧栏**：品牌栏右端的按钮（Show lists／Show inbox）、`cmd-shift-l` 或设置里的 Sidebar shows 切 Lists 和 Inbox；侧栏隐藏时只有设置能切，和 T3 一样，这时侧栏快捷键不起作用。窗口按钮后面的按钮或 `cmd-b` 隐藏侧栏；隐藏后这个按钮留在原处，点它把侧栏找回来；和 T3 一样，旁边不再放别的，回 Home 用 `cmd-shift-h`。隐藏期间，不管在 Home 还是别处，布局都不显示 agent 在做什么：有 agent 需要你时，Herdr 自己的通知照样会告诉你；把侧栏找回来就能看到全部。`cmd-shift-b` 打开详情。
 - **打开菜单的按钮**：详情、面板 `+`、子 agent 计数、排序、New space、New tab in… 等按钮在菜单或弹层开着时保持按下，提示不会盖在上面；再点一次就关闭。
 - **Inbox**：鼠标移到已结束的卡片上，点 `✓ Settle` 收起；有新工作时它会自己回来，也可以点那一行的撤销箭头拿回来。`cmd-shift-s`（隐藏侧栏时也能用，Lists 里不起作用）Settle 当前查看的 agent 并回到 Home，已 Settle 的则取回。你自己取回的 agent（点撤销箭头、拖出 Settled 或按 `cmd-shift-s`）排到 Active 顶部。点 `Undo` 则放回原位。接着按 `cmd-]` 打开最上面的卡片，可以逐张处理。卡片和行可以像 T3 一样拖动：移动 6px 即拿起；`Pinned` 和 `Active` 标签展开，拿起的行标出松开后的动作（Pin、Unpin、Settle、Un-settle），列表在落点让出位置。Pinned 保留你排的顺序，新置顶的排最上，Active 和 Settled 按各自的排序。按 Esc 或从侧栏左右两侧拖出放回原处，从上下边缘拖出则按标记落下；Working 卡片拿不起来。按住卡片的 `✓ Settle`（或已 Settle 行的撤销箭头）划过多行，可以一次 Settle（或取回）整段。和 Agents 列表共用同一份置顶。
 - **设置**：侧栏底部的 sliders 按钮或 `cmd-shift-,` 打开布局自己的设置，样子和 Herdr 的设置一样。改动立即生效，更新后也保留。

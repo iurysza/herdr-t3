@@ -28,7 +28,7 @@ Herdr App 的一个安静、近似 T3 Code 的窗口，在 agent 越开越多时
 
 ### 侧栏框架
 
-品牌栏先给 macOS 窗口按钮留位置，接着照 T3 的侧栏开关放一个 28px 的隐藏侧栏按钮，隔 8（侧栏图标之间统一的间距）放 Herdr 的应用图标和暗色的 `Herdr`，图标和侧栏按钮的图标一样大，两者合起来是回 Home 的按钮；它只有一个样子，在 Home 和悬停时都不提亮，栏太窄时名字整个让出。侧栏隐藏时标签栏从同样的内边距开始，开关位置不动，只有图标；照 T3 收起的侧栏，标签前面不放别的东西，也没有品牌。这一行不报 agent 的状态：状态归侧栏，有 agent 需要人时由 Herdr 自己的通知提醒。品牌栏没有切模式按钮：用 `cmd-shift-l` 和布局设置在 Lists、Inbox 之间切换。窗口按钮挪到与这条栏的中线对齐；侧栏照 T3 不会窄过这一行，所以窗口窄时 `Herdr` 的末尾和下面 Inbox 筛选按钮的图标右边对齐。底栏的 32px 控件间隔 4px，依次是 Herdr Settings、布局设置（sliders）和 Clean up（trash），都是图标按钮。Clean up 运行 `t3-tabs.cleanup`，打开它的对话框。空位显示 Undo，下载好更新后多一个 `Update` 胶囊。规格：[sidebar](docs/internals/specs/sidebar.md)。
+品牌栏先给 macOS 窗口按钮留位置，接着照 T3 的侧栏开关放一个 28px 的隐藏侧栏按钮，隔 8（侧栏图标之间统一的间距）放 Herdr 的应用图标和暗色的 `Herdr`，图标和侧栏按钮的图标一样大，两者合起来是回 Home 的按钮；它只有一个样子，在 Home 和悬停时都不提亮，栏太窄时名字整个让出。侧栏隐藏时标签栏从同样的内边距开始，开关位置不动，只有图标；照 T3 收起的侧栏，标签前面不放别的东西，也没有品牌。这一行不报 agent 的状态：状态归侧栏，有 agent 需要人时由 Herdr 自己的通知提醒。品牌栏右端有一个 28px 的模式按钮，在 Lists、Inbox 之间切换，图标表示要去的那一边；`cmd-shift-l` 和布局设置也一样。窗口按钮挪到与这条栏的中线对齐；侧栏照 T3 不会窄过这一行，所以窗口窄时 `Herdr` 的末尾和下面 Inbox 筛选按钮的图标右边对齐。底栏的 32px 控件间隔 4px，依次是 Herdr Settings、布局设置（sliders）和 Clean up（trash），都是图标按钮。Clean up 运行 `t3-tabs.cleanup`，打开它的对话框。空位显示 Undo，下载好更新后多一个 `Update` 胶囊。规格：[sidebar](docs/internals/specs/sidebar.md)。
 
 ### Inbox
 

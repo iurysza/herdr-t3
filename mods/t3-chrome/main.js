@@ -180,12 +180,12 @@ export default class WorkspaceChrome extends View {
           .on_click(() => run("app.update")).child("Update"), 16))))));
     }
     // As T3's: past the macOS window buttons (layout traffic_lights) the sidebar's toggle, where it stays with the sidebar hidden
-    // (t3-tabs draws it there then, sidebar.js toggleLeft), then BRAND_GAP on Herdr's tile and name, then a place to drag the window. Which
-    // mode the sidebar shows is a setting (settings.js) and ⌘⇧L, not a button here.
-    const w = window(), zoom = settings().zoom || 1, left = toggleLeft(w, layout(), zoom);
+    // (t3-tabs draws it there then, sidebar.js toggleLeft), then BRAND_GAP on Herdr's tile and name, then a place to drag the window,
+    // then the mode switch, 8 in from the edge.
+    const w = window(), root = layout(), zoom = settings().zoom || 1, left = toggleLeft(w, root, zoom), inbox = sidebarParts(root).stack?.active === "inbox";
     // One look always, as T3's (brand.js): a click goes Home. The name gets what's left past the inset, the right padding, the toggle,
-    // BRAND_GAP and the rest of the button; short of room it gives way whole, never the tile or the toggle.
-    const named = !this.brandW || this.brandW - left - 8 - 28 - BRAND_GAP - BRAND_FIXED >= (this.brandNameW || 0);
+    // BRAND_GAP, the rest of the button and the mode switch; short of room it gives way whole, never the tile or the buttons.
+    const named = !this.brandW || this.brandW - left - 8 - 28 - BRAND_GAP - BRAND_FIXED - 28 >= (this.brandNameW || 0);
     return focusRoot(this, h_flex().id("brand").size_full().bg(t.chrome).pl(left).pr(8).items_center()
       .on_size_change((size, cx) => { this.brandW = size.width / zoom; cx.notify(); })
       // T3's 28px title bar button.
@@ -197,7 +197,13 @@ export default class WorkspaceChrome extends View {
         .on_click(() => { this.hot = null; run("t3-tabs.toggle-sidebar"); }), radiusOf("sm")), { action: "t3-tabs.toggle-sidebar", below: true }))
       .child(div().w(BRAND_GAP).flex_none())
       .child(brand(this, t, { named, zoom }))
-      .child(div().flex_1()));
+      .child(div().flex_1())
+      // The mode a click shows: a tray for the Inbox, rows with their marks for the lists.
+      .child(tip(this, t, "sidebar-mode", inbox ? "Show lists" : "Show inbox", stop(this, t, "sidebar-mode", drawButton(t, "sidebar-mode", {
+        size: "sm", icon: `mods/t3-chrome/icons/${inbox ? "layout-list" : "inbox"}.svg`, label: inbox ? "Show lists" : "Show inbox", hot: this.hot === "sidebar-mode" })
+        .flex_none().on_hover(glow(this, "sidebar-mode"))
+        .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+        .on_click(() => run("t3-tabs.sidebar")), radiusOf("sm")), { action: "t3-tabs.sidebar", below: true })));
   }
 
   // Whether Review can read the active space where its tab works, asked again only when that changes. Until Git answers it

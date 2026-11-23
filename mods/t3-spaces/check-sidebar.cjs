@@ -433,9 +433,11 @@ for (const width of [208, 256]) {
   assert.deepEqual([...f.state["t3.pins"]], ["vps/t2"], "pin acts on the selected remote button");
   const header = f.load("t3-chrome").render(cx);
   // The toggle first, where it stays with the sidebar hidden, then Herdr's tile and name (brand.js), as T3's SidebarBrand; only
-  // here: the hidden sidebar's row keeps the toggle alone. The mode switch is a setting and ⌘⇧L, not a button here.
-  assert.deepEqual(header.items.map(n => n.key).filter(k => typeof k === "string"), ["tip-sidebar-toggle", "home"], "the header holds the toggle, then Herdr's tile and name (Home, no tooltip); search is a shortcut");
-  assert.equal(find(header, "sidebar-mode"), null, "no mode button");
+  // here: the hidden sidebar's row keeps the toggle alone. The mode switch ends the row.
+  assert.deepEqual(header.items.map(n => n.key).filter(k => typeof k === "string"), ["tip-sidebar-toggle", "home", "tip-sidebar-mode"], "the header holds the toggle, then Herdr's tile and name (Home, no tooltip), then the mode switch; search is a shortcut");
+  assert.equal(find(header, "sidebar-mode").style.accessibility_label, "Show inbox", "with Lists shown, it offers the Inbox");
+  fire(find(header, "sidebar-mode"), "on_click", {}, cx);
+  assert.deepEqual(f.calls.pop(), ["t3-tabs.sidebar", {}]);
   assert.ok(walk(find(header, "home")).some(n => n.kind === "image" && n.source === "frame/welcome/herdr.png") && strings(find(header, "home")).includes("Herdr"), "Herdr's tile and name");
   const after = header.items[header.items.findIndex(n => n.key === "tip-sidebar-toggle") + 1];
   assert.deepEqual([header.style.pl, header.style.pr, find(header, "sidebar-toggle").style.h, find(header, "sidebar-toggle").style.w, find(header, "sidebar-toggle").style.rounded, after.style.w], [8, 8, 28, 28, 8, 8], "8 in with no window buttons of the layout's; T3's 28px toggle, the brand 8 after it, the sidebar's one gap between icons");
@@ -445,13 +447,13 @@ for (const width of [208, 256]) {
   assert.deepEqual(f.calls.pop(), ["t3-tabs.home", {}]);
   {
     // Short of room the name goes whole, never cut to "Her…"; the tile stays and still goes Home. 8 in and 8 at the right, the
-    // toggle's 28 and 8 after it, the button's 16 + 4, 40 of name.
+    // toggle's 28 and 8 after it, the button's 16 + 4, 40 of name, the mode switch's 28.
     const brand = f.load("t3-chrome"), named = () => strings(find(brand.render(cx), "home")).includes("Herdr");
     fire(find(brand.render(cx), "home-name"), "on_size_change", { width: 40 }, cx);
-    fire(brand.render(cx), "on_size_change", { width: 111 }, cx);
+    fire(brand.render(cx), "on_size_change", { width: 139 }, cx);
     assert.ok(!named(), "no room, no name");
-    assert.ok(find(brand.render(cx), "home") && find(brand.render(cx), "sidebar-toggle"), "the tile and the toggle stay");
-    fire(brand.render(cx), "on_size_change", { width: 112 }, cx);
+    assert.ok(find(brand.render(cx), "home") && find(brand.render(cx), "sidebar-toggle") && find(brand.render(cx), "sidebar-mode"), "the tile and the buttons stay");
+    fire(brand.render(cx), "on_size_change", { width: 140 }, cx);
     assert.ok(named(), "room for it whole, the name");
   }
   const footer = f.load("t3-chrome", { footer: true });
