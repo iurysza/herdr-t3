@@ -17,7 +17,7 @@ const context = vm.createContext({ KEY: { panels: 't3.panels' }, GROUP_GAP: 4, l
 // shows the change has Details and the toggle where they end up. Checked at every step below.
 const endFits = () => assert.equal(ui.end, ui.open ? 0 : 4 + 28 + (ui.buttons ? 8 + 3 * 28 : 0), `window-end for a panel ${ui.open ? 'open' : 'closed'}`);
 for (const f of ['terminal-context.js', 'surfaces.js', 'panel.js']) vm.runInContext(fs.readFileSync(`${__dirname}/${f}`, 'utf8').replace(/^import [^;]*;\n/gm, '').replace(/^export /gm, ''), context);
-const p = vm.runInContext('({ panelState, showPage, openFile, closeSurface, togglePanel, toggleWide, restorePanel, syncPanel, activateSurface, resetFilesTabs, reviewRepo, openReview, reviewShown })', context);
+const p = vm.runInContext('({ panelState, showPage, openFile, closeSurface, togglePanel, toggleWide, restorePanel, syncPanel, activateSurface, resetFilesTabs, reviewRepo, openReview, reviewShown, surfacesFor })', context);
 for (const k of ['showPage', 'openFile', 'closeSurface', 'togglePanel', 'toggleWide', 'restorePanel', 'syncPanel', 'activateSurface']) { const f = p[k]; p[k] = (...a) => { const r = f(...a); endFits(); return r; }; }
 const tabs = () => p.panelState().tabs.map(t => (t.id === p.panelState().active ? '*' : '') + t.id).join(' ');
 
@@ -111,6 +111,11 @@ const tabs = () => p.panelState().tabs.map(t => (t.id === p.panelState().active 
   p.togglePanel('review'); assert.equal(ui.open, false);
   p.showPage('review'); p.closeSurface(); assert.equal(ui.open, false);
   assert.equal(JSON.stringify(saved['t3.panels'].b), before);
+  // Mentions, where a layout puts it in panel-body's stack: its own tab and slot, kept only while that slot is there.
+  ui.slots = ['files', 'mentions', 'panel-empty']; ui.space = 'home'; ui.open = false;
+  p.showPage('mentions'); assert.deepEqual([ui.open, ui.page, tabs()], [true, 'mentions', '*mentions']);
+  assert.equal(p.surfacesFor('home', ['files', 'mentions', 'panel-empty']).tabs.map(t => t.id).join(' '), 'mentions');
+  assert.equal(p.surfacesFor('home', ['files', 'panel-empty']).tabs.map(t => t.id).join(' '), '');
   // newBorn shares globalThis.t3LastBorn across mod copies, stays strictly > Date.now(), previous t3LastBorn, and existing tab borns.
   {
     const sharedSaved = {}, frozenNow = 10000;

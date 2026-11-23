@@ -23,7 +23,7 @@ import { alpha } from "./color.js";
 
 // The space panel's surfaces (docs/adr/0017) that aren't a file: their names and icons. Review wears pulls.review's own mark,
 // as the Review bar does: a review, not a git command. In its colors, so an image.
-const PAGES = { files: ["Files", "folder-tree"], review: ["Review", "pulls-review", true] };
+const PAGES = { files: ["Files", "folder-tree"], mentions: ["Mentions", "layout-list"], review: ["Review", "pulls-review", true] };
 // The surface menus: as wide as t3-menu's, as tall as their rows and their 4 in (docs/internals/t3-tokens.md「菜单行」).
 const MENU_W = 220, menuHeight = (rows) => rows * MENU_ROW + 8;
 const zoomOf = () => Number(settings()?.zoom) || 1;
@@ -223,7 +223,7 @@ export default class WorkspaceChrome extends View {
   // + 's menu: under its press, else (the panel's cmd-t) under where + stands: the head's mod ends its padding in from the
   // window's right, + after the tabs as the strip has them scrolled. A popup's `at` is in zoomed px.
   openSurfaceMenu(press) {
-    const z = zoomOf(), rows = panelState().pages.includes("review") ? 2 : 1;
+    const z = zoomOf(), pages = panelState().pages, rows = 1 + (pages.includes("mentions") ? 1 : 0) + (pages.includes("review") ? 1 : 0);
     let at = hang(press, 0, { align: "start", gap: 6 }).at;
     if (!at && this.headW) {
       const root = layout(), high = layoutNode(root, "panel-head")?.size?.px ?? 40;
@@ -300,6 +300,7 @@ export default class WorkspaceChrome extends View {
       { label: "Close all", act: () => closeSurface(p.target, "all") },
     ] : [
       { label: "Files", key: "f", icon: "mods/t3-chrome/icons/folder-tree.svg", act: () => showPage("files") },
+      ...(s.pages.includes("mentions") ? [{ label: "Mentions", key: "m", icon: "mods/t3-chrome/icons/layout-list.svg", act: () => showPage("mentions") }] : []),
       ...(s.pages.includes("review") ? [{ label: "Review", key: "r", icon: image("mods/t3-chrome/icons/pulls-review.svg").size(16), disabled: Boolean(this.reviewReason), reason: this.reviewReason, act: () => showPage("review") }] : []),
     ];
     const choose = (i, cx) => {
