@@ -57,6 +57,7 @@ share button mods/t3-menu mods/t3-actions mods/t3-agents mods/t3-spaces mods/t3-
 share trigger mods/t3-actions mods/t3-chrome mods/t3-pane mods/t3-tabs mods/t3-inbox mods/t3-spaces mods/t3-agents mods/t3-files extras/mods/review extras/mods/asciicn-wallpaper extras/mods/pulls-review
 share popup-menu mods/t3-menu mods/t3-files mods/t3-actions extras/mods/review
 share titlebar mods/t3-chrome mods/t3-actions
+share machine mods/t3-agents mods/t3-inbox
 share palette mods/t3-home mods/t3-chrome mods/t3-new-menu mods/t3-picker
 # The checks' fake elements and loader, beside each mod's checks: a standalone repo has no shared/.
 share check-kit mods/t3-actions mods/t3-chrome mods/t3-files mods/t3-inbox mods/t3-new-menu mods/t3-pane mods/t3-picker mods/t3-spaces mods/t3-tabs extras/mods/pulls-review extras/mods/review

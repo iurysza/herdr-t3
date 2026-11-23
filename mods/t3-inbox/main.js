@@ -3,7 +3,7 @@
 
 import { View } from "gpui-kit";
 import { v_flex, InputState, ScrollHandle } from "gpui-base";
-import { agents, terminals, panes, spaces, focused, theme, shared, setShared, setAgentOrder, props, nextCommand, settings, layout, window } from "herdr";
+import { agents, terminals, panes, spaces, focused, theme, shared, setShared, setAgentOrder, props, nextCommand, settings, layout, window, machines } from "herdr";
 import { modStatus, programOf } from "./name.js";
 import { descendants, ownStatus, stillSettled, terminalByAddress } from "./tree.js";
 import { inboxFacts } from "./facts.js";
@@ -19,6 +19,7 @@ import { inboxRowView } from "./row-view.js";
 import { inboxList, searchList } from "./list-view.js";
 import { sidebarParts } from "./sidebar.js";
 import { KEY, readLocal } from "./store.js";
+import { machineOf, machineChoices, activeChoice } from "./machine.js";
 import { rememberNotice, forgetNotice, undoNotice } from "./notice.js";
 import { prunePins } from "./pins.js";
 import { writeLabel } from "./labels.js";
@@ -77,6 +78,8 @@ export default class Inbox extends View {
     this.rowH = {};
     // The spaces shown, as T3 scopes threads to projects; none: all of them.
     this.scope = readLocal("scope", []);
+    // The machine shown (machine.js): null all, "" this computer, else a machine's name.
+    this.machine = readLocal("machine", null);
     this.scopeOpen = false;
     this.scopeAt = 0;
     this.search = InputState.new({ placeholder: "Search spaces…" });
@@ -292,15 +295,21 @@ export default class Inbox extends View {
     if (searching && routeChanged) this.searchRoute = visible ? inView : null;
     const normalRoute = !searching && (routeChanged || (this.searchRoute && this.searchRoute === inView));
     if (!searching || !visible) this.searchRoute = null;
-    if (inboxMode && normalRoute && inView && this.scope.length) {
-      const a = every.find((x) => x.address === inView);
-      if (a && !this.scope.includes(a.space)) { this.scope = []; localStorage.setItem("scope", "[]"); this.limit = FIRST; }
+    const spMachine = new Map(sp.map((s) => [s.id, s.machine ?? ""]));
+    const machineOfEntry = (a) => (/** @type {any} */ (a).mod ? spMachine.get(a.space) ?? "" : machineOf(a.address));
+    const known = machineChoices(machines(), every.filter((a) => !(/** @type {any} */ (a).mod)));
+    if (inboxMode && normalRoute && inView && (this.scope.length || this.machine != null)) {
+      const a = every.find((x) => x.address === inView), on = activeChoice(this.machine, known);
+      if (a && this.scope.length && !this.scope.includes(a.space)) { this.scope = []; localStorage.setItem("scope", "[]"); this.limit = FIRST; }
+      if (a && on != null && machineOfEntry(a) !== on) { this.machine = null; localStorage.setItem("machine", "null"); this.limit = FIRST; }
     }
     if (!visible) this.cancelReveal();
     else if (normalRoute) this.requestReveal(inView === this.hovered ? null : inView, cx);
     this.inView = inView;
     // A space that's gone reads as all; its id stays stored, so the scope returns with it.
     const scope = this.scope.filter((id) => sp.some((s) => s.id === id));
+    // A machine not listed now (offline, removed) reads as all; its name stays stored, so the filter returns with it.
+    const machine = activeChoice(this.machine, known);
     const term = terminalByAddress(all);
     // The key reports an explicit return; a label cleared by Undo, even in another window, keeps its place.
     const unsettled = shared(KEY.unsettled) ?? {};
@@ -344,8 +353,8 @@ export default class Inbox extends View {
       changed: state(a) === ownStatus(a.status, a.address, all) ? tabs.get(a.tab)?.changed_at : null,
     })), all, now, cx);
     const sections = inboxSections(every.map((a) => ({ a, address: a.address, settledAt: settledAt(a), hidden: hidden(a),
-      working: working(a), viewing: viewing(a), since: since(a), begun: begun(a), napUntil: napUntil(a), blocked: state(a) === "blocked" })),
-      { scope, pins, workOpen: this.workOpen, napOpen: this.napOpen, open: this.open, limit: this.limit });
+      working: working(a), viewing: viewing(a), since: since(a), begun: begun(a), napUntil: napUntil(a), blocked: state(a) === "blocked", machine: machineOfEntry(a) })),
+      { scope, machine, pins, workOpen: this.workOpen, napOpen: this.napOpen, open: this.open, limit: this.limit });
     const { pinned, out, work, nap, put, busyRows, napRows, rows, next } = sections;
     // A menu whose card went (snoozed, gone) or now needs the person closes, as T3's.
     if (this.napMenu && ![...pinned, ...out, ...busyRows].some((a) => a.address === this.napMenu && state(a) !== "blocked")) this.napMenu = null;
@@ -357,7 +366,7 @@ export default class Inbox extends View {
     }
     if (publish) this.publishRows(inboxMode, [...pinned, ...out, ...busyRows], [...napRows, ...rows], inView,
       [...pinned, ...out, ...work, ...nap, ...put]);
-    return { now, all, ps, sp, f, every, inView, inboxMode, scope, term, pins, wake, facts, ...fields, ...sections };
+    return { now, all, ps, sp, f, every, inView, inboxMode, scope, machine, known, term, pins, wake, facts, ...fields, ...sections };
   }
 
   // `cards` lead the rows, and say how many: the tab bar's Settle goes on to the next of them (t3.settings).

@@ -12,6 +12,7 @@ import { openMenu } from "./menu.js";
 import { button, radiusOf } from "./button.js";
 import { trigger } from "./trigger.js";
 import { namer } from "./name.js";
+import { choiceLabel } from "./machine.js";
 
 // The space filter's rows, flush as T3's, and how many show before the list scrolls: the whole rows T3's 23rem holds.
 const SCOPE_ROW = 32, SCOPE_SHOWN = 9;
@@ -52,17 +53,29 @@ export function inboxSearchResults(model, query) {
   }).sort((x, y) => y.score - x.score);
 }
 
-export function inboxMatches(view, { sp, every }) {
+// With more than one machine the menu starts with them (`kind: "machine"`), then the spaces on the one chosen.
+export function inboxMatches(view, { sp, every, known = [""], machine = null }) {
   const q = view.search.value().toLowerCase();
   const home = shared(KEY.home);
   const entrySpaces = new Set(every.map((a) => a.space));
-  const eligible = sp.filter((s) => s.id !== home && (entrySpaces.has(s.id) || view.scope.includes(s.id)));
-  return [{ id: null, name: "All spaces" }, ...eligible].filter((s) => s.name.toLowerCase().includes(q));
+  const eligible = sp.filter((s) => s.id !== home && (entrySpaces.has(s.id) || view.scope.includes(s.id))
+    && (machine == null || (s.machine ?? "") === machine));
+  const machineRows = known.length > 1 ? [null, ...known].map((c) => ({ id: `machine-${c ?? "all"}`, kind: "machine", machine: c, name: choiceLabel(c) })) : [];
+  return [...machineRows, { id: null, name: "All spaces" }, ...eligible].filter((s) => s.name.toLowerCase().includes(q));
+}
+
+/** Shows one machine's entries, or all's (null); a new choice starts the settled tail over and keeps the menu open. */
+export function pickInboxMachine(view, choice, cx) {
+  view.machine = choice;
+  localStorage.setItem("machine", JSON.stringify(choice));
+  view.limit = FIRST;
+  cx.notify();
 }
 
 // A click shows that space alone; shift-click adds or removes it and keeps the menu open, as in T3.
 export function pickInboxSpace(view, s, shift, cx) {
   if (!s) return;
+  if (s.kind === "machine") return pickInboxMachine(view, s.machine, cx);
   view.scope = !s.id ? [] : !shift ? [s.id] : view.scope.includes(s.id) ? view.scope.filter((id) => id !== s.id) : [...view.scope, s.id];
   localStorage.setItem("scope", JSON.stringify(view.scope));
   // A new scope starts the settled tail over, as T3's does.
@@ -72,7 +85,8 @@ export function pickInboxSpace(view, s, shift, cx) {
 }
 
 export function inboxTop(view, t, model) {
-  const { sp, ps, scope } = model;
+  const { sp, ps, scope, machine = null } = model;
+  const onMachine = machine != null ? choiceLabel(machine) : null;
   // A space's mark, as t3-spaces draws it.
   const avatar = (id, name, size) => projectMark("mods/t3-inbox", sp.find((s) => s.id === id) ?? { name: name ?? "" }, size, t, ps);
   // T3's top row: search on the left, then the space filter, new space and new tab.
@@ -80,7 +94,8 @@ export function inboxTop(view, t, model) {
   // The filter shows what it filters to: one avatar, two overlapping, or the plain filter icon.
   const scoped = sp.filter((s) => scope.includes(s.id)), found = inboxMatches(view, model);
   const choice = (s, i) => {
-    const on = s.id ? scope.includes(s.id) : scope.length === 0;
+    const isMachine = s.kind === "machine";
+    const on = isMachine ? s.machine === machine : s.id ? scope.includes(s.id) : scope.length === 0;
     // Selection is a check badge on the icon, as in T3.
     return h_flex().id(`scope-${s.id ?? "all"}`).h(SCOPE_ROW).px(8).gap(8).flex_none().items_center().rounded(4)
       .when(i === view.scopeAt, (el) => el.bg(t.selected))
@@ -88,9 +103,10 @@ export function inboxTop(view, t, model) {
       .role("button").accessibility_label(s.name)
       .on_click((e, cx) => view.pick(s, e.modifiers.shift, cx))
       // A space's row: the space's menu, as in Spaces; the list closes under it.
-      .when(Boolean(s.id && props()?.menu), (el) => el.on_mouse_down("right", (_e, cx) => { view.scopeOpen = false; openMenu(view, "space", { id: s.id }, cx, props().menu); cx.notify(); }))
+      .when(Boolean(s.id && !isMachine && props()?.menu), (el) => el.on_mouse_down("right", (_e, cx) => { view.scopeOpen = false; openMenu(view, "space", { id: s.id }, cx, props().menu); cx.notify(); }))
       .child(div().relative().flex_none()
-        .child(s.id ? avatar(s.id, s.name, 16) : svg("mods/t3-inbox/icons/folder.svg").size(16).text_color(t.muted))
+        .child(isMachine ? svg("mods/t3-inbox/icons/server.svg").size(16).text_color(t.muted)
+          : s.id ? avatar(s.id, s.name, 16) : svg("mods/t3-inbox/icons/folder.svg").size(16).text_color(t.muted))
         // T3's ring is outside its 12px badge; a border here is inside, so 16 and 2 further out.
         .when(on, (el) => el.child(h_flex().absolute().right(-6).bottom(-6).size(16).rounded_full().bg(t.accent)
           .border(2).border_color(t.popover).items_center().justify_center()
@@ -109,13 +125,15 @@ export function inboxTop(view, t, model) {
       cx.notify();
     })
     .trigger(stop(view, t, "inbox-scope", button(t, "inbox-scope", { size: "sm", hot: view.hot === "inbox-scope", on: view.scopeOpen,
-      label: scoped.length ? `Filter by space: ${scoped.map((s) => s.name).join(", ")}` : "Filter by space",
-      icon: scoped.length ? undefined : "mods/t3-inbox/icons/list-filter.svg" }).on_hover(glow(view, "inbox-scope"))
+      label: [onMachine && `on ${onMachine}`, scoped.length && scoped.map((s) => s.name).join(", ")].filter(Boolean).reduce((l, x, i) => l + (i ? ", " : ": ") + x, "Filter by space"),
+      // Filtered to a machine only, it names the machine, as Agents' filter does.
+      ...(onMachine && !scoped.length ? { size: "compact", text: onMachine, color: t.accent } : {}),
+      icon: scoped.length ? undefined : onMachine ? "mods/t3-inbox/icons/server.svg" : "mods/t3-inbox/icons/list-filter.svg" }).on_hover(glow(view, "inbox-scope"))
       .when(scoped.length > 0, el => el.child(scoped.length > 1
         // T3's second mark overlaps by 4 with a 2px ring of the sidebar's color.
         ? h_flex().children(scoped.slice(0, 2).map((s, i) => i === 0 ? avatar(s.id, s.name, 14)
           : h_flex().flex_none().ml(-6).rounded(6).border(2).border_color(t.chrome).child(avatar(s.id, s.name, 14))))
-        : avatar(scoped[0].id, scoped[0].name, 16))), radiusOf("sm")))
+        : avatar(scoped[0].id, scoped[0].name, 16))), radiusOf(onMachine && !scoped.length ? "compact" : "sm")))
     .content(v_flex().id("inbox-scope-panel").w(288).mt(4).p(4).rounded(8)
       .bg(t.popover).border_1().border_color(t.border).shadow_lg().text_size(14)
       .on_key_down((e, cx) => {
