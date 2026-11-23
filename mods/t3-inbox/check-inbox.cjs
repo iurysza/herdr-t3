@@ -88,7 +88,7 @@ function fixture() {
     modStatus: (x) => f.state[`${x.mod}.status`]?.[x.tab] ?? null,
     localStorage: { getItem: (k) => f.data.get(k) ?? null, setItem: (k, v) => f.data.set(k, v), removeItem: (k) => f.data.delete(k) },
     keys: () => [], agents: () => f.rows, terminals: () => [...f.terms], // a new list each call, as Herdr gives (tree.js indexes each list once)
-    panes: () => [], machines: () => [{ name: "KVM", connected: true }],
+    panes: () => [], machines: () => [{ name: null, layout: "ready" }],
     spaces: () => [{ id: "s1", name: "One", tabs: [] }, { id: "s2", name: "Two", tabs: [] }],
     home: () => "/home/test",
     focused: () => ({ agent: f.rows.find((a) => a.focused)?.address }),
@@ -807,6 +807,40 @@ test("the space filter lists unscoped Inbox entries and keeps a selected shell-o
   assert.ok(find(f.tree, "show-all-spaces"));
   f.event("scope-s2", "on_click", { modifiers: { shift: true } }); f.render();
   assert.deepEqual(choices(), ["scope-all", "scope-s1", "scope-s3"]);
+});
+
+test("the machine filter shows one machine's cards, lists its spaces, and reads an unlisted machine as all", () => {
+  const f = fixture();
+  f.context.spaces = () => [{ id: "s1", name: "One", machine: null, tabs: [] }, { id: "vps/s2", name: "Two", machine: "vps", tabs: [] }];
+  f.context.machines = () => [{ name: null, layout: "ready" }, { name: "vps", layout: "ready" }];
+  f.add("A"); const b = f.add("vps/B"); b.space = "vps/s2"; b.space_name = "Two";
+  f.render();
+  assert.deepEqual(f.active().sort(), ["A", "vps/B"]);
+  f.mod.scopeOpen = true; f.render();
+  const choices = () => find(f.tree, "inbox-scope-list").items.filter(n => n.key?.startsWith("scope-")).map(n => n.key);
+  assert.deepEqual(choices(), ["scope-machine-all", "scope-machine-", "scope-machine-vps", "scope-all", "scope-s1", "scope-vps/s2"]);
+  f.event("scope-machine-vps", "on_click", { modifiers: { shift: false } }); f.render();
+  assert.equal(f.data.get("machine"), '"vps"');
+  assert.equal(f.mod.scopeOpen, true, "a machine pick keeps the menu open for a space");
+  assert.deepEqual(f.active(), ["vps/B"]);
+  assert.deepEqual(choices(), ["scope-machine-all", "scope-machine-", "scope-machine-vps", "scope-all", "scope-vps/s2"]);
+  f.mod.pick({ id: "machine-", kind: "machine", machine: "" }, false, f.cx); f.render();
+  assert.deepEqual(f.active(), ["A"]);
+  f.context.machines = () => [{ name: null, layout: "ready" }];
+  f.rows.splice(f.rows.indexOf(b), 1); f.terms.splice(f.terms.findIndex((k) => k.address === "vps/B"), 1);
+  f.mod.machine = "vps"; f.render();
+  assert.deepEqual(f.active(), ["A"], "an unlisted machine reads as all");
+  assert.equal(find(f.tree, "scope-machine-all"), null, "one machine: no machine rows");
+});
+
+test("a machine filter that leaves nothing names the machine and Show all spaces clears it", () => {
+  const f = fixture();
+  f.context.machines = () => [{ name: null, layout: "ready" }, { name: "vps", layout: "ready" }];
+  f.add("A"); f.mod.pick({ id: "machine-vps", kind: "machine", machine: "vps" }, false, f.cx); f.render();
+  assert.ok(texts(f.tree).includes("Nothing on vps yet"));
+  f.event("show-all-spaces", "on_click"); f.render();
+  assert.equal(f.data.get("machine"), "null");
+  assert.deepEqual(f.active(), ["A"]);
 });
 
 test("space filter keyboard navigation and submit use the same eligible spaces as the menu", () => {

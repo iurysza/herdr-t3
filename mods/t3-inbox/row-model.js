@@ -120,8 +120,8 @@ export function inboxFields({ every, all, term, pending, changed, now, inView })
 
 // Plain row facts in; ordered sections, visible pages and the next wake out. No storage, commands or timers.
 /** @returns {any} */
-export function inboxSections(every, { scope, pins, workOpen, napOpen, open, limit }) {
-  const list = scope.length ? every.filter((x) => scope.includes(x.a.space)) : every;
+export function inboxSections(every, { scope, machine = null, pins, workOpen, napOpen, open, limit }) {
+  const list = every.filter((x) => (machine == null || x.machine === machine) && (!scope.length || scope.includes(x.a.space)));
   const pinned = pins.map((p) => list.find((x) => x.address === p)).filter((x) => x && !x.hidden);
   const rest = list.filter((x) => !pins.includes(x.address));
   // Active as byCard; Working by when its run started.

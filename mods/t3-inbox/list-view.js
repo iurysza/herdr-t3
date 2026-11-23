@@ -7,6 +7,7 @@ import { focusStop, onStop, stop } from "./focus.js";
 import { inboxTop } from "./filter.js";
 import { FIRST, MORE, ago } from "./row-model.js";
 import { projectMark } from "./project.js";
+import { choiceLabel } from "./machine.js";
 
 // T3's slim rows and Show more (h-9) and its shelves' headers (h-8), logical px.
 export const SLIM = 36, SHELF = 32;
@@ -43,7 +44,7 @@ export function searchList(view, t, model, results) {
 }
 
 export function inboxList(view, t, model, drag, draw, cx) {
-  const { now, list, every, sp, scope, kids, running, started, pinned, out, work, nap, put, busyRows, napRows, busy } = model;
+  const { now, list, every, sp, scope, machine = null, kids, running, started, pinned, out, work, nap, put, busyRows, napRows, busy } = model;
   const { d, dragging, lifted, plan, cardH, rows, hot, aim, gap, others, placeholder, boundary, pinTo } = drag;
   const { card, slim } = draw;
   const showMore = view.open && put.length > view.limit;
@@ -188,16 +189,19 @@ export function inboxList(view, t, model, drag, draw, cx) {
   addLane("active", out, card, CARD_GAP, add);
   // Only a list with nothing in it says so; Active alone being empty stays blank.
   if (list.length === 0) {
-    const filtered = scoped.length > 0 && every.length > 0;
+    const filtered = (scoped.length > 0 || machine != null) && every.length > 0;
+    const where = scoped.length > 1 ? "these spaces" : scoped.length ? scoped[0].name : choiceLabel(machine);
     const all = "show-all-spaces";
     add(fly("m:empty", "marker", v_flex().px(8).py(24).gap(4).items_center().text_center().text_size(12).line_height("16px").text_color(t.dim)
       .child(div().child(!every.length ? "Nothing here yet. Agents and panes that report a status show up here."
-        : !filtered ? "No matching cards." : scoped.length > 1 ? "Nothing in these spaces yet" : `Nothing in ${scoped[0].name} yet`))
+        : !filtered ? "No matching cards." : !scoped.length ? `Nothing on ${where} yet` : `Nothing in ${where} yet`))
       .when(filtered, (el) => el.child(stop(view, t, all, div().id(all).px(4).rounded(4).font_medium().text_color(t.foreground)
         .hover((s) => s.underline()).role("button").accessibility_label("Show all spaces")
         .on_click((_e, cx) => {
           const keyboard = onStop(view) === all;
-          view.pick({ id: null }, false, cx);
+          // All of them: every space on every machine.
+          if (machine != null) view.pick({ id: "machine-all", kind: "machine", machine: null }, false, cx);
+          if (scope.length) view.pick({ id: null }, false, cx);
           if (keyboard) focusStop(view, "inbox-scope");
         }).child("Show all spaces"), 4)))));
   }

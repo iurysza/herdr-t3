@@ -1,4 +1,4 @@
-// Which machine an agent runs on, and the Agents list scoped to one. A choice is null (all machines), "" (this computer) or a
+// Which machine an agent runs on, and a list scoped to one (Agents, Inbox). A choice is null (all machines), "" (this computer) or a
 // machine's name.
 
 /** A remote agent's address is `machine/tN`; this computer's has no `/`. @param {string} address */

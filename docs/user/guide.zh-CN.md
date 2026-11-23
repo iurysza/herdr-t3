@@ -38,9 +38,9 @@
 
 ## 日常用法
 
-在 Inbox 的 **Search** 中输入名字，侧栏会显示紧凑的结果列表。↑、↓ 选结果，Enter 打开，Esc 清空。`cmd-p` 仍可在整个窗口里跳转。**Filter by space** 列出有 Inbox 条目的 space，并保留已选中的 space。筛选后 Inbox 为空时，点 **Show all spaces** 恢复完整范围。
+在 Inbox 的 **Search** 中输入名字，侧栏会显示紧凑的结果列表。↑、↓ 选结果，Enter 打开，Esc 清空。`cmd-p` 仍可在整个窗口里跳转。**Filter by space** 列出有 Inbox 条目的 space，并保留已选中的 space。连接了其他机器时，同一菜单最上面列出机器：选一台只看它的卡片和 space。筛选后 Inbox 为空时，点 **Show all spaces** 恢复完整范围。
 
-点击卡片打开 agent。点卡片上的图钉可取消置顶，Undo 可恢复它的位置。悬停分支旁的工作树图标可查看 checkout 目录名和分支名。
+点击卡片打开 agent。点卡片上的图钉可取消置顶，Undo 可恢复它的位置。鼠标移到未置顶的卡片上，点右上角最左边的图钉即可置顶，工作中的卡片也有。悬停分支旁的工作树图标可查看 checkout 目录名和分支名。
 
 从 Home 回到 space 或在 space 间跳转时，目标终端直接出现在该 space 的工作区域。如果上次离开时开着 Files，它会和终端一起出现。切到已缓存的文件标签时，面包屑和预览一起恢复。
 

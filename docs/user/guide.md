@@ -38,9 +38,9 @@ Each part in more detail than the [README](../../README.md).
 
 ## Everyday use
 
-In Inbox, type a name in **Search**. Matching agents appear in a compact list in the sidebar. Use ↑ or ↓ to pick a result, Enter to open it and Esc to clear the search. `cmd-p` opens Go to across the window. **Filter by space** lists spaces with Inbox entries and keeps any space you've already selected in the filter. When the filter leaves the Inbox empty, **Show all spaces** restores the full scope.
+In Inbox, type a name in **Search**. Matching agents appear in a compact list in the sidebar. Use ↑ or ↓ to pick a result, Enter to open it and Esc to clear the search. `cmd-p` opens Go to across the window. **Filter by space** lists spaces with Inbox entries and keeps any space you've already selected in the filter. With another machine linked, the same menu starts with the machines: pick one to see only its cards and spaces. When the filter leaves the Inbox empty, **Show all spaces** restores the full scope.
 
-Click a card to open the agent. Click its pin to unpin it. Undo restores its place. Hover the worktree icon beside a branch to see the checkout directory name and branch.
+Click a card to open the agent. Click its pin to unpin it. Undo restores its place. Hover a card that isn't pinned and click the pin at the left of its corner to pin it; Working cards have it too. Hover the worktree icon beside a branch to see the checkout directory name and branch.
 
 When you return from Home or jump between spaces, the destination terminal appears below its tab bar. If you left Files open there, it appears alongside the terminal. Selecting a cached file tab brings back its breadcrumb and preview together.
 
