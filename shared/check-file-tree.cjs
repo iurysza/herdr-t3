@@ -31,6 +31,8 @@ assert.ok(sorted.findIndex(e => !e.dir) > 0 && sorted.slice(0, sorted.findIndex(
 assert.deepEqual(plain(parseListing("f\0file10\0f\0file2\0")).map((e) => e.name), ["file2", "file10"]);
 assert.deepEqual(plain(parseListing("f\0b.txt\0d\0src\0f\0a b.md\0")), [{ name: "src", dir: true }, { name: "a b.md", dir: false }, { name: "b.txt", dir: false }]);
 assert.deepEqual([join("", "a"), join("a", ""), join("/r/", "a"), join("/", "a")], ["a", "a", "/r/a", "/a"]);
+// An absolute path, a file opened from outside the space's folder, stays itself.
+assert.equal(join("/r", "/tmp/a.txt"), "/tmp/a.txt");
 
 // Review's paths, in the diff's order: folders where their first path comes, a chain of lone folders one row.
 const kids = pathEntries(["packages/cli/src/a.ts", "README.md", "packages/cli/src/daemon/b.ts", "gone/c.ts"].map((p) => ({ path: p, missing: p.startsWith("gone") })));

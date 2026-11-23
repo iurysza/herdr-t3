@@ -2,7 +2,7 @@
 import { sortEntries } from "./file-tree.js";
 
 /** `a/b`: either may be "" (the space's folder, or a path from it). */
-export const join = (a, b) => !a ? b : !b ? a : `${a.replace(/\/$/, "")}/${b}`;
+export const join = (a, b) => !a || b?.startsWith("/") ? b : !b ? a : `${a.replace(/\/$/, "")}/${b}`;
 
 // A folder's entries, NUL-separated kind and name, `.git` left out (as Herdr's files mod lists them).
 export const LIST = 'for p in "$1"/* "$1"/.[!.]* "$1"/..?*; do [ -e "$p" ] || [ -L "$p" ] || continue; n=${p##*/}; [ "$n" = .git ] && continue; if [ -d "$p" ]; then k=d; else k=f; fi; printf "%s\\0%s\\0" "$k" "$n"; done; test -d "$1"';

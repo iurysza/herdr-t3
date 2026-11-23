@@ -234,7 +234,7 @@ export default class Files extends View {
         st.pick = null;
         if (file) this.loadPreview(st, file, cx);
         // A later tree move, too, owns the selection and any scroll or focus it requested.
-        if (pick.latest()) this.reveal(st, file ?? folder, cx, pick.focus);
+        if (pick.latest() && !file?.startsWith("/")) this.reveal(st, file ?? folder, cx, pick.focus);
       });
     }
     if (returning && awake?.root) {
@@ -408,8 +408,11 @@ export default class Files extends View {
   pick(st, path, cx, focus = false) {
     this.clearSearch(st);
     if (this.search.value()) this.search.set_value("");
+    const root = st.root?.replace(/\/$/, "");
+    if (root && path?.startsWith(root + "/")) path = path.slice(root.length + 1);
     this.open(st, path, cx);
-    this.reveal(st, path, cx, focus);
+    // A file outside the space's folder has no row in its tree.
+    if (!path?.startsWith("/")) this.reveal(st, path, cx, focus);
   }
 
   // Selects the preview using memory only: safe during a draw, even when the file has never been read.
@@ -698,7 +701,7 @@ export default class Files extends View {
     // Plain code shown: colored once left alone. Behind, not asked: a refresh draws it again once it's in front.
     else if (!v?.waiting && this.wantsColor(v) && this.shown()) this.colorLater(st, v, IDLE, cx);
     this.syncSearch(st, cx);
-    const width = this.size?.width ?? 800, nav = navShown(width, this.navOpen, this.narrowNav);
+    const width = this.size?.width ?? 800, nav = navShown(width, this.navOpen, this.narrowNav) && !st.file?.startsWith("/");
     return focusRoot(this, v_flex().id("t3-files").relative().size_full().min_h(0).text_color(t.foreground).text_size(13)
       .track_focus(this.handle).on_mouse_down("left", () => this.handle.focus())
       .on_size_change((size, cx) => { this.size = { width: size.width / zoom(), height: size.height / zoom() }; cx.notify(); })
@@ -710,7 +713,7 @@ export default class Files extends View {
   // 32 high, not T3's 40, so its centre is the work column's pane header's (specs/files.md); its controls centred, as Review's bar,
   // so Tree stays put between the pages.
   toolbar(st, t) {
-    const width = this.size?.width ?? 800, nav = navShown(width, this.navOpen, this.narrowNav);
+    const width = this.size?.width ?? 800, outside = Boolean(st.file?.startsWith("/")), nav = navShown(width, this.navOpen, this.narrowNav) && !outside;
     const md = kindOf(st.file ?? "") === "markdown", code = shared(KEY.markdown) === "code";
     const parts = (st.trail ?? st.file)?.split("/").filter(Boolean) ?? [], current = st.folder ?? st.file;
     const crumb = (label, path, last) => {
@@ -728,9 +731,11 @@ export default class Files extends View {
         .when(on, s => s.bg(tint(t, "chrome", true))).when(!on, el => el.hover(s => s.bg(tint(t, "chrome", false)))))
       .child(svg(`${MOD}/icons/chevron-right.svg`).size(14).text_color(on ? t.foreground : t.dim)).role("button").accessibility_label(`Browse ${path || nameOf(st.root)}`), 4); };
     return h_flex().id("t3-files-toolbar").h(32).flex_none().px(12).gap(8).items_center()
-        .child(h_flex().id("t3-files-breadcrumbs").flex_1().min_w(0).overflow_x_scroll().bg("#00000000").items_center().text_size(12)
+        .when(outside, el => el.child(div().id("t3-files-outside-path").flex_1().min_w(0).truncate().pl(12).text_size(12).font_medium()
+          .child(home() && (st.file + "/").startsWith(home().replace(/\/$/, "") + "/") ? "~" + st.file.slice(home().replace(/\/$/, "").length) : st.file)))
+        .when(!outside, el => el.child(h_flex().id("t3-files-breadcrumbs").flex_1().min_w(0).overflow_x_scroll().bg("#00000000").items_center().text_size(12)
           .when(Boolean(st.root), (el) => el.child(crumb(nameOf(st.root.replace(/\/$/, "")) || st.root, "", current === "")))
-          .children(parts.flatMap((part, i) => [separator(parts.slice(0, i).join("/")), crumb(part, parts.slice(0, i + 1).join("/"), parts.slice(0, i + 1).join("/") === current)])))
+          .children(parts.flatMap((part, i) => [separator(parts.slice(0, i).join("/")), crumb(part, parts.slice(0, i + 1).join("/"), parts.slice(0, i + 1).join("/") === current)]))))
         .child(this.openControl(st, t))
         .child(h_flex().id("t3-files-switches").flex_none().gap(GROUP_GAP).items_center()
           .child(this.control(t, "t3-files-render-mode", md && !code ? "code-xml" : "eye", md ? code ? "Show preview" : "Show code" : "Preview is not available for this file", cx => {
@@ -739,11 +744,11 @@ export default class Files extends View {
           }, { on: md && !code, disabled: !md, size: "sm", iconSize: 14 }))
           // Wrap or scroll long lines, this page's own choice.
           .child(this.control(t, "t3-files-wrap", "text-wrap", st.view?.code && (!md || code) ? wrapLines() ? "Disable word wrap" : "Enable word wrap" : "Word wrap is only available in code", (cx) => { setWrapLines(!wrapLines()); cx.notify(); }, { on: wrapLines(), disabled: !st.view?.code || md && !code, size: "sm", iconSize: 14 }))
-          .child(this.control(t, "t3-files-nav-toggle", "folder-tree", !st.file ? "The file tree is always visible for folders" : nav ? "Hide the file tree" : "Show the file tree", cx => {
+          .child(this.control(t, "t3-files-nav-toggle", "folder-tree", !st.file ? "The file tree is always visible for folders" : outside ? "File is outside this space" : nav ? "Hide the file tree" : "Show the file tree", cx => {
             if (width < NAV_NARROW) this.narrowNav = !nav;
             else { this.navOpen = !this.navOpen; setNavOpen(this.navOpen); }
             cx.notify();
-          }, { on: !st.file || nav, disabled: !st.file, size: "sm", iconSize: 14 })));
+          }, { on: !st.file || nav, disabled: !st.file || outside, size: "sm", iconSize: 14 })));
   }
 
   // T3's OpenInPicker in its header, outlined: the app's icon opens the file or folder there; ⌄ picks the app (menus.js,
@@ -777,11 +782,11 @@ export default class Files extends View {
             .child(div().max_w_full().whitespace_normal().child(st.file)).child(div().max_w_full().whitespace_normal().text_color(t.dim).child(st.root))
             .child(h_flex().gap(4)
               .child(this.control(t, "t3-files-retry-file", "refresh-cw", "Try reading the file again", cx => { st.view = { loading: true }; cx.notify(); this.loadPreview(st, st.file, cx, true); }))
-              .child(this.control(t, "t3-files-locate", "folder-tree", "Locate the file in Files", cx => {
+              .when(!st.file?.startsWith("/"), el => el.child(this.control(t, "t3-files-locate", "folder-tree", "Locate the file in Files", cx => {
                 if ((this.size?.width ?? 800) < NAV_NARROW) this.narrowNav = true;
                 else { this.navOpen = true; setNavOpen(true); }
                 this.reveal(st, st.file, cx, true);
-              })))
+              }))))
           : v.image ? div().size_full().p(16).flex().items_center().justify_center().child(image(v.image).max_w_full().max_h_full())
           // The page's edge (t3-tokens「规则」R1), not T3's px-6.
           : md && !code ? div().id("t3-files-md").size_full().overflow_y_scrollbar().px(12).py(16).child(TextView.markdown(`t3-files-md-${st.id}-${st.file}`, v.text).selectable(true).scrollable(false).text_size(14))
