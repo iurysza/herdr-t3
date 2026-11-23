@@ -3,7 +3,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex, ScrollHandle } from "gpui-base";
-import { agents, terminals, panes, spaces, focused, theme, layout, shared, setShared, setAgentOrder, settings, openOverlay, closeOverlay, props, nextCommand, window } from "herdr";
+import { agents, terminals, panes, spaces, focused, theme, layout, shared, setShared, setAgentOrder, settings, openOverlay, closeOverlay, props, nextCommand, window, machines } from "herdr";
 import { descendants, notNews, ownStatus, subAgents, treeStatus } from "./tree.js";
 import { stopsInit, stopsEnd, focusRoot, enter } from "./focus.js";
 import { trigger, hang } from "./trigger.js";
@@ -13,6 +13,7 @@ import { agentEntries, agentStatus, STACK, RANK, SECTION } from "./rows.js";
 import { sidebarParts } from "./sidebar.js";
 import { KEY, closedKey, readLocal } from "./store.js";
 import { prunePins, setPinned } from "./pins.js";
+import { machineOf, machineChoices, activeChoice, scopeAgents, choiceLabel, pick, takePick } from "./machine.js";
 const SORTS = [
   { id: "priority", label: "Priority", icon: "clock" },
   { id: "grouped", label: "Grouped by space", icon: "layers" },
@@ -20,6 +21,8 @@ const SORTS = [
 const sortOf = () => SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
 
 const SORT_WIDTH = 200;
+// Kept per computer in this mod's localStorage (machine.js): null all, "" this computer, else a machine's name.
+const machineChoice = () => readLocal("machine", null);
 // Past this many rows the list is windowed (render); before its first measure it draws this tall, and two rows past each end.
 const WINDOW_AT = 50, FIRST_H = 800, OVERDRAW = 74;
 
@@ -30,6 +33,7 @@ function revealVisible({ rail, stack } = sidebarParts(layout())) {
 export default class Agents extends View {
   async close() {
     if (props()?.sortMenu) setShared(closedKey("t3-agents", "sort"), Date.now());
+    if (props()?.machineMenu) setShared(closedKey("t3-agents", "machine"), Date.now());
     this.cancelReveal();
     this.listScroll?.release();
     this.listScroll = null;
@@ -37,7 +41,7 @@ export default class Agents extends View {
   }
 
   init(_props, cx) {
-    if (props()?.sortMenu) {
+    if (props()?.sortMenu || props()?.machineMenu) {
       // It takes the keyboard, as the shipped menu does. As T3's menus: nothing's lit until a key or the pointer arrives, and it fades in.
       this.at = propsLit();
       this.keys = cx.focus_handle();
@@ -121,11 +125,10 @@ export default class Agents extends View {
   // right after a start, or while a machine connects, its agents aren't listed yet.
   prune(all) {
     const kept = prunePins(all);
-    const machine = (addr) => (addr.includes("/") ? addr.split("/")[0] : "");
-    const heard = new Set(all.map((k) => machine(k.address)));
+    const heard = new Set(all.map((k) => machineOf(k.address)));
     const live = new Set(all.filter((k) => k.state === "live").map((k) => k.address));
     // Group headers (sp-…, sec-…, pinned) fold under the same store; only agents' entries end.
-    const ended = Object.keys(this.folded).filter((k) => !/^(sp-|sec-|pinned$)/.test(k) && heard.has(machine(k)) && !live.has(k));
+    const ended = Object.keys(this.folded).filter((k) => !/^(sp-|sec-|pinned$)/.test(k) && heard.has(machineOf(k)) && !live.has(k));
     for (const k of ended) delete this.folded[k];
     if (ended.length) localStorage.setItem("folded", JSON.stringify(this.folded));
     return kept;
@@ -177,6 +180,37 @@ export default class Agents extends View {
         .when(s.id === on, (el) => el.child(svg("mods/t3-agents/icons/check.svg").size(14).flex_none().text_color(t.foreground)))));
   }
 
+  machineMenu(t) {
+    const known = machineChoices(machines(), agents()), on = props().machine ?? null, rows = [null, ...known];
+    const choose = (c) => {
+      pick(c);
+      closeOverlay(props().overlay);
+    };
+    return v_flex()
+      .id("machine-menu")
+      .w_full()
+      .p(4)
+      .bg(t.popover)
+      .text_size(14)
+      .opacity(this.shown ? 1 : 0).transition("opacity", MOTION)
+      .track_focus(this.keys).on_key_down(menuKeys(this, rows.map(choiceLabel), (at) => choose(rows[at])))
+      .child(div().px(8).py(6).text_size(12).line_height("16px").font_medium().text_color(t.muted).child("Show agents on"))
+      .children(rows.map((c, i) => h_flex()
+        .id(`machine-${c ?? "all"}`)
+        .h(28)
+        .px(8)
+        .gap(8)
+        .rounded(4)
+        .items_center()
+        .text_color(t.foreground)
+        .role("button").accessibility_label(choiceLabel(c))
+        .when(i === this.at, el => el.bg(t.selected))
+        .on_hover(litOnHover(this, "at", i))
+        .on_click(() => choose(c))
+        .child(div().flex_1().min_w(0).truncate().child(choiceLabel(c)))
+        .when(c === on, (el) => el.child(svg("mods/t3-agents/icons/check.svg").size(14).flex_none().text_color(t.foreground)))));
+  }
+
   status(t, a, note = "", id) {
     return agentStatus(this, t, a, note, id);
   }
@@ -198,7 +232,11 @@ export default class Agents extends View {
     const shown = f?.pane && !f.terminal && !every.some((a) => a.tab === f.tab && a.address === f.agent) ? null : f?.agent ?? f?.terminal;
     // A kept sub-agent (one with a pane) is in agents() too: under its parent it gets no row of its own, unless pinned, as Herdr's list (#539).
     const nested = new Set(every.flatMap((a) => descendants(all, a.address).map((k) => k.address)));
-    const list = every.filter((a) => pinSet.has(a.address) || !nested.has(a.address));
+    // Scoped to one machine after observe(), which must still see every agent's pins and folds.
+    const picked = takePick();
+    if (picked !== undefined) localStorage.setItem("machine", JSON.stringify(picked));
+    const known = machineChoices(machines(), every), machine = activeChoice(machineChoice(), known);
+    const list = scopeAgents(every.filter((a) => pinSet.has(a.address) || !nested.has(a.address)), machine, known);
     const top = new Set(list.map((a) => a.address)), byAddress = new Map(all.map((k) => [k.address, k]));
     // A sub-agent folded away from view lights its nearest listed ancestor, as T3's resolveSidebarRowThreadId does.
     const ancestor = (() => {
@@ -234,7 +272,7 @@ export default class Agents extends View {
     // counts: Idle folds by default, and leaving a row there would take it off the walk, with no key back.
     const ordered = groups.flatMap(g => g.members), order = [...new Set(ordered.map(a => a.address))];
     this.publishRows({ order, view: ancestor }, parts);
-    return { sort, list: ordered, all, shown, ancestor, ps, sp, now, byPriority, facts, listed, groups, parts };
+    return { sort, list: ordered, all, shown, ancestor, ps, sp, now, byPriority, facts, listed, groups, parts, known, machine };
   }
 
   publishRows(drawn, parts) {
@@ -252,8 +290,10 @@ export default class Agents extends View {
   render(cx) {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
+    if (props()?.machineMenu) return this.machineMenu(t);
     const data = this.compute();
-    const { sort, list } = data;
+    const { sort, list, known, machine } = data;
+    const machineW = 200, machineH = 8 + 28 + 28 * (known.length + 1), on = machine != null ? choiceLabel(machine) : null;
     const entries = agentEntries(this, t, data);
 
     // The list's motion, as t3-inbox's and T3's (Sidebar.motion.ts). Folds and the sort play it too: T3 skips only a bottom shelf's
@@ -316,14 +356,22 @@ export default class Agents extends View {
             .flex_none()
             .items_center()
             .justify_between()
-            .child(div().text_size(12).font_medium().text_color(t.muted).child("Agents"))
+            .child(div().flex_1().text_size(12).font_medium().text_color(t.muted).child("Agents"))
+            // With one machine there's nothing to filter. Scoped, it names the machine.
+            .when(known.length > 1, (el) => el.child(
+              trigger(this, t, "ag-machine", { icon: "mods/t3-agents/icons/list-filter.svg", iconSize: 16, size: on ? "compact" : "sm", text: on ?? undefined,
+                color: on ? t.accent : undefined, label: on ? `Show agents on: ${on}` : "Show agents on", closed: closedKey("t3-agents", "machine"),
+                onOpen: (b) => { openOverlay({ mod: "t3-agents", kind: "popup", width: machineW, height: machineH, ...hang(b, machineW), props: { machineMenu: true, machine, ...litProp(!b) } }); } }),
+            ))
             .child(
               // Hung from the button, right edges together, as T3's menus. No press (the keyboard), the app's default.
               trigger(this, t, "ag-sort", { icon: `mods/t3-agents/icons/${sort.icon}.svg`, label: `Sort agents: ${sort.label}`, closed: closedKey("t3-agents", "sort"),
                 onOpen: (b) => { openOverlay({ mod: "t3-agents", kind: "popup", width: SORT_WIDTH, height: 140, ...hang(b, SORT_WIDTH), props: { sortMenu: true, ...litProp(!b) } }); } }),
             ),
       )
-      .when(list.length === 0, (el) =>
+      .when(list.length === 0 && on != null, (el) =>
+        el.child(div().px(16).py(24).text_center().text_size(12).line_height("16px").text_color(t.dim).child(`No agents on ${on}.`)))
+      .when(list.length === 0 && on == null, (el) =>
         el.child(div().px(16).py(24).text_center().text_size(12).line_height("16px").text_color(t.dim).child("No agent status yet. Agents show up here when they report their status. Older versions and agents inside tmux may not.")),
       )
       .when(!windowed, (el) => el.child(v_flex().id("ag-list").flex_1().min_h(0).px(8).pb(8)

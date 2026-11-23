@@ -590,6 +590,36 @@ for (const width of [208, 256]) {
 }
 
 {
+  // Show agents on: the list, its groups and the published walk follow the machine; pins still see every agent.
+  const f = fixture(256), ag = f.load("t3-agents");
+  f.state["t3.pins"] = ["t0"];
+  fire(find(ag.render(cx), "ag-machine"), "on_click", {}, cx);
+  const opened = plain(f.overlays.pop().props);
+  assert.deepEqual([opened.machineMenu, opened.machine], [true, null], "the menu is told the choice: its own copy has other storage");
+  // The popup: a copy sharing the module, with its own props (and, in Herdr, its own localStorage, so it writes none).
+  const ctx = f.scopes.get("t3-agents"), was = ctx.props, menuProps = { ...opened, overlay: "o" };
+  ctx.props = () => menuProps;
+  const menu = f.also("t3-agents", menuProps), drawn = () => menu.render(cx);
+  assert.deepEqual(["machine-all", "machine-", "machine-vps"].map(id => strings(find(drawn(), id))[0]), ["All machines", "This computer", "vps"]);
+  assert.ok(walk(find(drawn(), "machine-all")).some(n => n.source === "mods/t3-agents/icons/check.svg"), "all, checked");
+  fire(find(drawn(), "machine-vps"), "on_click", {}, cx);
+  ctx.props = was;
+  assert.deepEqual([f.closed.pop(), f.stores.get("t3-agents").get("machine")], ["o", undefined], "the menu closes and stores nothing itself");
+  let at = ag.render(cx);
+  assert.equal(f.stores.get("t3-agents").get("machine"), '"vps"', "the list keeps the pick in its storage");
+  assert.deepEqual([Boolean(find(at, "ag-vps/t2")), find(at, "ag-t0"), find(at, "pinned")], [true, null, null], "only vps's agents, and t0's pin is out of view");
+  assert.deepEqual(plain(f.state["t3-agents.rows"].order), ["vps/t2"], "the keyboard walks what's shown");
+  assert.deepEqual(plain(f.state["t3.pins"]), ["t0"], "the hidden agent keeps its pin");
+  assert.equal(find(at, "ag-machine").style.accessibility_label, "Show agents on: vps");
+  f.stores.get("t3-agents").set("machine", '"gone"');
+  at = ag.render(cx);
+  assert.ok(find(at, "ag-t0") && find(at, "ag-vps/t2"), "a machine not listed reads as all");
+  assert.equal(find(at, "ag-machine").style.accessibility_label, "Show agents on");
+  f.stores.get("t3-agents").set("machine", '""');
+  assert.deepEqual(plain(ag.compute().list.map(a => a.address)), ["t0"], "this computer's only");
+}
+
+{
   // A card from another machine says so as T3's does: a server mark before its program, the machine named on hover.
   const f = fixture(256), root = f.load("t3-inbox").render(cx);
   const card = find(root, "card-vps/t2"), mark = find(card, "machine-vps/t2");

@@ -42,7 +42,7 @@ Lists splits the sidebar into Spaces and Agents, each with a 32px heading aligne
 
 A machine reported as unable to keep agents running after logout has a warning in its heading, even while connected. Click it for Herdr's Add machine fix instructions; never run privileged commands automatically. A missing report shows no warning.
 
-Agents are 36px rows with a program icon, time in state (`<1m`, `5m`, `3h`, `2d`) that becomes a pin on hover, and the status mark; viewed and attention-needing agents stand out. Sort by space or priority, Pinned a group in both. Sub-agents fold under their parent; blocked or failed ones stay visible. Spec: [lists](docs/internals/specs/lists.md).
+Agents are 36px rows with a program icon, time in state (`<1m`, `5m`, `3h`, `2d`) that becomes a pin on hover, and the status mark; viewed and attention-needing agents stand out. Sort by space or priority, Pinned a group in both. With more than one machine, a filter left of the sort shows agents on all machines, this computer or one linked machine. Sub-agents fold under their parent; blocked or failed ones stay visible. Spec: [lists](docs/internals/specs/lists.md).
 
 ### Tab bar
 

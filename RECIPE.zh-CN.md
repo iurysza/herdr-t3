@@ -42,7 +42,7 @@ Lists 把侧栏分成 Spaces 和 Agents，两者标题高 32，与 Inbox 顶行�
 
 机器报告退出后无法保持 agent 运行时，标题显示警告，即使仍已连接。点击打开 Herdr 的 Add machine 修复说明，不自动执行提权命令；没有报告时不显示警告。
 
-Agents 是 36px 行：程序图标、状态持续时间（`<1m`、`5m`、`3h`、`2d`，悬停换成 pin）和状态标记；正在看和需要人的醒目。可按 space 或优先级排序，两种都有 Pinned 组。子 agent 折在父级下，blocked 或失败的仍露出。规格：[lists](docs/internals/specs/lists.md)。
+Agents 是 36px 行：程序图标、状态持续时间（`<1m`、`5m`、`3h`、`2d`，悬停换成 pin）和状态标记；正在看和需要人的醒目。可按 space 或优先级排序，两种都有 Pinned 组。有不止一台机器时，排序左边的筛选按钮可以只看全部机器、本机或某台连接的机器上的 agent。子 agent 折在父级下，blocked 或失败的仍露出。规格：[lists](docs/internals/specs/lists.md)。
 
 ### 标签栏
 

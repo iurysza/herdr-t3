@@ -17,7 +17,7 @@
 ## 功能
 
 - **Inbox 搜索**：输入名字，侧栏显示紧凑的结果列表。用 ↑、↓ 选择，Enter 打开。
-- **Inbox 和 Lists**：用品牌栏的模式按钮、`cmd-shift-l` 或布局设置切换。Inbox 按注意力排列 agent，支持 Settle、Snooze 和 Mark unread（从右键菜单把已读空闲 agent 标回 Done）。**Settled** 收纳已收起的 agent，**Filter by space** 只列出有 Inbox 条目或已在筛选中选中的 space。Lists 列出 space 和其中的 agent。
+- **Inbox 和 Lists**：用品牌栏的模式按钮、`cmd-shift-l` 或布局设置切换。Inbox 按注意力排列 agent，支持 Settle、Snooze 和 Mark unread（从右键菜单把已读空闲 agent 标回 Done）。**Settled** 收纳已收起的 agent，**Filter by space** 只列出有 Inbox 条目或已在筛选中选中的 space。Lists 列出 space 和其中的 agent，可以看全部机器或只看一台。
 - **切换 space** 或从 Home 返回 space 时，目标标签栏、终端和上次打开的右侧面板一起出现。
 - **Home**：收起正在看的 agent 后，回到一个安静的页面，不会自动跳到下一张卡片。下一步看什么由你决定。也可以在设置（`cmd-shift-,`）里改成跳到下一张卡片，或者把 Home 换成终端或你自己的 mod。
 - **同一个名字，同一套标记**：卡片、列表、标签和窗格标题用同样的方式给终端取名，卡片、列表和标签共用同一套状态标记。
