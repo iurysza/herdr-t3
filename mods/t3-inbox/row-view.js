@@ -15,6 +15,7 @@ import { ago } from "./row-model.js";
 import { openMenu } from "./menu.js";
 import { button, radiusOf } from "./button.js";
 import { worktreeLabel } from "./worktree.js";
+import { pin as pinAgent } from "./pins.js";
 
 // The settle key: the layout's tab bar holds it; a standalone Inbox, its own command.
 const settleKey = () => keyOf("t3-tabs.settle") ? "t3-tabs.settle" : "t3-inbox.settle";
@@ -102,7 +103,7 @@ export function inboxRowView(view, t, model, actions, drag) {
     const canNap = !ghost && !a.mod && st !== "blocked", menu = canNap && view.napMenu === a.address;
     // The pointer or keys going into its menu leave the card, but it stays as it was: the menu hangs from the clock, and
     // Settle going would pull the clock, and the menu with it, out from under the pointer.
-    const over = !dragging && !view.sweep?.moved && (menu || view.hovered === a.address || within(view, [`card-${a.address}`, `unpin-${a.address}`, `settle-${a.address}`, `snooze-${a.address}`, `woke-${a.address}`]));
+    const over = !dragging && !view.sweep?.moved && (menu || view.hovered === a.address || within(view, [`card-${a.address}`, `unpin-${a.address}`, `pin-${a.address}`, `settle-${a.address}`, `snooze-${a.address}`, `woke-${a.address}`]));
     // As T3's rows: what you're on or what wants you leads; the rest recede until hovered, in color only so nothing reflows.
     const leads = on || ghost || st === "blocked" || st === "done" || woke(a);
     const marks = machine || pic ? h_flex().gap(4).flex_none().items_center()
@@ -113,6 +114,8 @@ export function inboxRowView(view, t, model, actions, drag) {
     const offer = over && !busy(a);
     const id = `settle-${a.address}`;
     const napOffer = canNap && over;
+    // Pin sits leftmost in the corner, where an unpinned card has no pin glyph to click; a pinned card unpins by its glyph.
+    const pinId = `pin-${a.address}`, pinOffer = !ghost && !a.mod && !pins.includes(a.address) && over;
     // As in T3, the corner says the state worth saying (Working, Needs you, Done: finished and not yet seen), else how long ago it
     // changed. The time is monospace children, one per part, so a monospace space doesn't open "1h 5m" wider than the gaps.
     const pill = (color, mark, label, time) => h_flex().id(`state-${a.address}`).h(20).gap(4).flex_none().items_center().font_medium().text_color(color)
@@ -129,7 +132,7 @@ export function inboxRowView(view, t, model, actions, drag) {
         cx.notify();
       })
       .child(svg("mods/t3-inbox/icons/alarm-clock.svg").size(16).flex_none().text_color(t.blocked)).child("Woke"), 4), { delay });
-    const acting = offer || napOffer, quiet = acting && (menu || !woke(a));
+    const acting = offer || napOffer || pinOffer, quiet = acting && (menu || !woke(a));
     // Lifted, or marked by a sweep, the corner says what letting go will do instead.
     // The state or the time, faded out on hover where Settle fades in over it, as T3's corner.
     const word = running(a)
@@ -152,6 +155,19 @@ export function inboxRowView(view, t, model, actions, drag) {
         .when(acting, (el) => el.on_hover((on, cx) => { view.detailsHold = on ? a.address : null; cx.notify(); }))
         .child(div().flex_none().when(quiet, (el) => el.absolute().top(0).right(0)).opacity(quiet ? 0 : 1).transition("opacity", MOTION).child(status))
         .child(h_flex().id(`controls-${a.address}`).h(20).flex_none().items_center().when(!acting, (el) => el.absolute().top(0).right(0))
+        .when(!ghost && !a.mod && !pins.includes(a.address), (el) => el.child(div().when(!pinOffer, (p) => p.absolute().top(0).right(0)).child(tip(view, t, pinId, "Pin agent",
+          button(t, pinId, { size: "tiny", surface: "row", label: "Pin agent", icon: "mods/t3-inbox/icons/pin.svg", hot: view.hot === pinId })
+            .opacity(pinOffer ? 1 : 0).transition("opacity", MOTION)
+            // Faded out it's no button: a click there is the card's.
+            .when(pinOffer, (b) => stop(view, t, pinId, b.on_hover(glow(view, pinId)).on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+              .on_click((_e, cx) => {
+                cx.stop_propagation();
+                if (justDropped()) return;
+                view.hot = null; // The card is about to move from under the pointer.
+                away(a, cx);
+                pinAgent(a.address);
+                cx.notify();
+              }), radiusOf("tiny"))), { delay }))))
         .when(Boolean(clock), (el) => el.child(clock))
         .child(div().when(!offer, (el) => el.absolute().top(0).right(0)).child(tip(view, t, id, a.mod ? "Settle and close" : "Settle agent", h_flex().id(id).h(20).px(6).mr(-4).gap(4).flex_none().items_center().rounded(6)
         .text_size(12).text_color(lit(id, t.muted)).opacity(offer ? 1 : 0).transition("opacity", MOTION)

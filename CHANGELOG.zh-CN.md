@@ -4,6 +4,7 @@
 
 ## 2026-11-23
 
+- 鼠标移到未置顶的 Inbox 卡片上（工作中的也行），右上角最左边出现图钉按钮，在时钟和 Settle 之前：点一下即可置顶，不用拖动或右键。
 - 连接了其他机器时，Inbox 的 **Filter by space** 菜单最上面列出机器：全部机器（All machines）、本机（This computer）或某台机器。选一台只看它的卡片，下面的 space 列表也只剩这台机器的 space，仍可再选 space。只按机器筛选时，按钮用强调色显示机器名。机器离线或被移除时显示全部卡片，等它回来再恢复，选择会保留。
 - 连接了其他机器时，Lists 里 Agents 标题行的排序左边多了筛选按钮：**Show agents on** 全部机器（All machines）、本机（This computer）或某台机器。筛选后按钮用强调色显示机器名，分组、数量和 `cmd-]`／`cmd-[` 只算这台机器的 agent。机器离线或被移除时显示全部 agent，等它回来再恢复，选择会保留。
 - 品牌栏右端的 Show lists／Show inbox 按钮回来了：点它在 Lists 和 Inbox 之间切换侧栏。`cmd-shift-l` 和设置 → Sidebar → Sidebar shows 照样能用。侧栏窄时先让出 `Herdr`，按钮留着。

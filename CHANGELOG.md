@@ -4,6 +4,7 @@ English · [中文](CHANGELOG.zh-CN.md)
 
 ## 2026-11-23
 
+- Hover an unpinned Inbox card, Working ones too, and a pin button appears at the left of its corner, before the clock and Settle: click it to pin the agent without a drag or a right-click.
 - With another machine linked, the Inbox's **Filter by space** menu starts with the machines: All machines, This computer or one machine. Pick one to see only its cards; the space list below then shows only that machine's spaces, and you can still pick a space. Filtered to a machine alone, the button names it in the accent colour. A machine that goes offline or is removed shows every card until it is back; your choice is kept.
 - With another machine linked, the Agents heading in Lists has a filter button left of sort: **Show agents on** All machines, This computer or one machine. Filtered, the button names the machine in the accent colour, and the groups, their counts and `cmd-]` / `cmd-[` cover only its agents. A machine that goes offline or is removed shows all agents until it is back; your choice is kept.
 - The brand bar's Show lists / Show inbox button is back at its right end: click it to switch the sidebar between Lists and Inbox. `cmd-shift-l` and Settings → Sidebar → Sidebar shows still work. In a narrow sidebar `Herdr` gives way before the button does.

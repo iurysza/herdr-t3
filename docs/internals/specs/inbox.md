@@ -64,6 +64,7 @@ Geometry, constants and edge rules of the Inbox sidebar (`t3-inbox`) and its Sno
 - Pinned agents stay at the top whatever their state.
 - Unpin returns the agent to its time slot and offers Undo; that Undo restores just the pin in its place and writes no terminal label.
 - The card's pin is a 16px button holding a 12px icon. Hover or keyboard focus changes it to `pin-off`; click or Enter unpins without opening or lifting the card.
+- An unpinned card (Working ones too, not a mod pane's) shows a `pin` button, `tiny` row size, leftmost in its corner on hover, hidden the way Settle is (opacity 0, absolute); click pins like the menu's Pin and offers no Undo (unpin is one click on the glyph).
 
 ## Undo notice
 
