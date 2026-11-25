@@ -36,6 +36,7 @@ share pins mods/t3-inbox mods/t3-agents mods/t3-tabs mods/t3-menu
 share notice mods/t3-tabs mods/t3-inbox
 share menu mods/t3-inbox mods/t3-agents mods/t3-spaces mods/t3-tabs mods/t3-pane
 share panel mods/t3-chrome mods/t3-tabs mods/t3-actions mods/t3-files extras/mods/pulls-review extras/mods/review
+share panel-focus mods/t3-files extras/mods/review
 share terminal-context mods/t3-tabs mods/t3-actions mods/t3-files mods/t3-chrome extras/mods/pulls-review extras/mods/review
 share surfaces mods/t3-chrome mods/t3-tabs mods/t3-actions mods/t3-files extras/mods/pulls-review extras/mods/review
 share scroll-strip mods/t3-tabs mods/t3-chrome

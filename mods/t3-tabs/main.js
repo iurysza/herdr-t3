@@ -20,7 +20,7 @@ import { rememberNotice, undoNotice } from "./notice.js";
 import { pinList, pin, unpin, putBack } from "./pins.js";
 import { writeLabel } from "./labels.js";
 import { openMenu } from "./menu.js";
-import { panelState, togglePanel, toggleWide, syncPanel, restorePanel, reviewRepo, layoutNode } from "./panel.js";
+import { panelState, togglePanel, toggleWide, syncPanel, restorePanel, reviewRepo, layoutNode, toggleEnter, leavePanel, stepSurface } from "./panel.js";
 import { rememberTerminal } from "./terminal-context.js";
 import { stripAt, stripWheel, stripFades } from "./scroll-strip.js";
 import { button as drawButton, radiusOf, tint as ghostTint, GROUP_GAP } from "./button.js";
@@ -131,6 +131,12 @@ export default class Tabs extends View {
           else notify({ title: "Review unavailable", body: problem, level: "warning" });
         }
         else if (command === "panel") togglePanel();
+        // Keys that take the keyboard in: Mentions' page toggled (opened and focused; showing already, put away, the keyboard back to the
+        // terminal), `panel-close` that put-away alone, and ⌃Tab / ⌃⇧Tab, bound under each page's `mod:` section, step the panel's tabs.
+        else if (command === "mentions") { if (!toggleEnter("mentions")) notify({ title: "Mentions unavailable", body: "This layout has no Mentions page.", level: "warning" }); }
+        else if (command === "panel-close") leavePanel();
+        else if (command === "panel-next") stepSurface(1);
+        else if (command === "panel-prev") stepSurface(-1);
         else if (command === "details") {
           if (this.navigation.atHome) continue;
           if (!panelState().wide) { run("t3-actions.details"); continue; }

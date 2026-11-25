@@ -1,7 +1,7 @@
 // The space panel (docs/adr/0012, 0017): the `panel` column at the window's right, the `panel-body` stack its render slots.
 // Each space keeps its record in t3.panels (docs/internals/storage.md). Where Herdr's own layout docks the Review extra in its
 // stack instead (no `panel-empty` slot), the host owns the head and these only show the page.
-import { layout, run, spaces, shared, setShared, exec, window } from "herdr";
+import { layout, run, spaces, shared, setShared, exec, window, focused, panes } from "herdr";
 import { KEY } from "./store.js";
 import { GROUP_GAP } from "./button.js";
 import { workFolder } from "./terminal-context.js";
@@ -151,6 +151,62 @@ export function hidePanel() {
   if (s.owns) save({ open: false, wide: false });
 }
 
+// The keyboard asked for a page (panel-focus.js): its slot, a number past the last request's, and when. The page's mod takes it
+// once it shows, so a key that opens the panel lands in it, and one that steps to another tab lands there.
+export function askPanelFocus(page) {
+  const now = Date.now();
+  setShared(PANEL_FOCUS, { slot: page, n: Math.max(now, Number(shared(PANEL_FOCUS)?.n ?? 0) + 1), at: now });
+}
+
+// Where the keyboard was before it went into the panel, so putting the panel away gives it back to that terminal.
+function noteReturn() {
+  const f = focused();
+  if (f?.pane) setShared(PANEL_RETURN, { pane: f.pane, tab: f.tab });
+}
+
+/** The keyboard back to a terminal of the tab in view: the one it left for the panel, else the focused one, else the first. */
+export function focusTerminal() {
+  const tab = focused()?.tab ?? spaces().find(p => p.active)?.tabs?.find(t => t.active)?.id;
+  const here = panes().filter(p => p.tab === tab && p.terminal), kept = shared(PANEL_RETURN);
+  const pick = here.find(p => p.pane === kept?.pane) ?? here.find(p => p.focused) ?? here[0];
+  if (pick) run("pane.focus", { pane: pick.pane });
+}
+
+/** A page's key that also takes the keyboard (⌘2 for Mentions): the panel on that page as `showPage` has it, and the page asked
+ *  for the keyboard. False where the layout has no such page. */
+export function enterPanel(page, keepDetails = false) {
+  noteReturn();
+  if (!showPage(page, keepDetails)) return false;
+  askPanelFocus(page);
+  return true;
+}
+
+/** A page's toggle that also takes the keyboard (⌘2 for Mentions): the panel already showing that page is put away and the keyboard
+ *  goes back to the terminal; any other state (closed, or open on another page) opens the page and asks for the keyboard. The
+ *  state, not who holds the keyboard, decides: a mod's own key section can't be relied on to see the key. False where the
+ *  layout has no such page. */
+export function toggleEnter(page, keepDetails = false) {
+  const s = panelState();
+  if (s.open && (s.owns ? s.active : s.page) === page) { leavePanel(); return true; }
+  return enterPanel(page, keepDetails);
+}
+
+/** The panel put away from inside it: the keyboard goes back to the terminal it came from. */
+export function leavePanel() {
+  hidePanel();
+  focusTerminal();
+}
+
+/** The next (`step` 1) or previous (-1) tab of the open panel, the first after the last, shown and holding the keyboard. */
+export function stepSurface(step) {
+  const s = panelState(), n = s.tabs.length;
+  if (!s.open || !s.owns || n < 2) return false;
+  const next = s.tabs[(Math.max(0, s.tabs.findIndex(t => t.id === s.active)) + step + n) % n];
+  if (!activateSurface(next.id)) return false;
+  askPanelFocus(slot(next.id));
+  return true;
+}
+
 /** A page's own entry: opens the panel on it, or puts away the panel already showing it. Without one: the panel as it was. */
 export function togglePanel(page) {
   const s = panelState();
@@ -177,6 +233,10 @@ export function toggleWide() {
 // The Review extra's keys, by space id, that the layout reads: what each space's Review shows (its scope, written by Review's
 // keep()) and its run's status word. Named once here, as store.js's KEY names the layout's own (an extra's aren't `t3`).
 export const REVIEW_SHOWN = "review.shown", REVIEW_STATUS = "review.status";
+
+// The keyboard's keys, named here for the same reason (storage.md): PANEL_FOCUS is the request a page's mod takes (panel-focus.js),
+// PANEL_RETURN the terminal pane the keyboard left for the panel.
+export const PANEL_FOCUS = "t3.panelFocus", PANEL_RETURN = "t3.panelReturn";
 
 /** What `space`'s Review shows (`review.shown`), while the tab that showed it is still there (its `born`): a closed one's is gone. */
 export function reviewShown(space) {

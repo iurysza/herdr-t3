@@ -75,6 +75,7 @@ Insert 拒绝包含控制字符的路径；可改用 Copy path。
 | `cmd-alt-b` | `t3-tabs.panel` | 打开 space 面板并停在上次的页面，或关闭它 |
 | `cmd-shift-g` | `t3-tabs.review` | 打开面板并切到 Review；已在显示 Review 就关闭面板。需装 Review 扩展 |
 | `cmd-shift-e` | `t3-tabs.files` | 打开面板并切到 Files；已在显示 Files 就关闭面板 |
+| Files、Review 或 Mentions 里 `ctrl-tab` / `ctrl-shift-tab` | `t3-tabs.panel-next` / `t3-tabs.panel-prev` | 下一个或上一个面板标签，首尾相接；切过去的页面拿到键盘，下一次按键接着切 |
 | Files 或 Review 里 `cmd-w`、`ctrl-alt-shift-x` | `t3-files.close`、`review.close` | 关闭活动面板标签，不关终端 |
 | Files 或 Review 里 `cmd-t` | `t3-chrome.surface-menu` | 在 + 下打开菜单，F／R 添加 Files／Review |
 | 终端焦点内 `cmd-t`、`ctrl-alt-c` | `t3-tabs.new` | 新建终端标签 |

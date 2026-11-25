@@ -2,6 +2,11 @@
 
 English · [中文](CHANGELOG.zh-CN.md)
 
+## 2026-11-25
+
+- **Ctrl+Tab steps the space panel's tabs** while Files, Review or Mentions has the keyboard: the next tab, the first after the last, each taking the keyboard so the next press goes on from there (`ctrl-shift-tab` goes back). With one tab it does nothing; with the terminal focused it still steps terminal tabs. Bind it under the page's `mod:` section in `keys.json` (`t3-tabs.panel-next` / `t3-tabs.panel-prev`).
+- For a layout with Mentions in the panel: `t3-tabs.mentions` toggles it. Closed, or open on another tab, it opens the panel on Mentions and gives it the keyboard; already showing Mentions, it puts the panel away and gives the keyboard back to the terminal it came from. One binding does both, wherever the keyboard is (`cmd-2` in `global` and `layout:herdr-t3`; no default key changes). `t3-tabs.panel-close` is that put-away on its own.
+
 ## 2026-11-23
 
 - Hover an unpinned Inbox card, Working ones too, and a pin button appears at the left of its corner, before the clock and Settle: click it to pin the agent without a drag or a right-click.

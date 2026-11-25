@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) · 中文
 
+## 2026-11-25
+
+- **Ctrl+Tab 切换 space 面板的标签**：Files、Review 或 Mentions 持有键盘时，切到下一个标签（最后一个之后回到第一个），并让它拿到键盘，下一次按键接着切（`ctrl-shift-tab` 往回）。只有一个标签时不动作；焦点在终端时仍切终端标签。在 `keys.json` 对应页面的 `mod:` 段里绑定（`t3-tabs.panel-next`／`t3-tabs.panel-prev`）。
+- 面板里放了 Mentions 的布局：`t3-tabs.mentions` 是一个开关。面板关着或停在别的标签时，打开面板切到 Mentions 并把键盘交给它；已经在显示 Mentions 就收起面板，把键盘还给来时的终端。键盘在哪里都是同一个绑定（`global` 和 `layout:herdr-t3` 里的 `cmd-2`，默认键不变）。`t3-tabs.panel-close` 只做收起那一半。
+
 ## 2026-11-23
 
 - 鼠标移到未置顶的 Inbox 卡片上（工作中的也行），右上角最左边出现图钉按钮，在时钟和 Settle 之前：点一下即可置顶，不用拖动或右键。
