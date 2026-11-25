@@ -460,6 +460,25 @@ async function checkCleanupDispatch() {
   assert.equal(f.calls[0]?.[0], "tab.close", "the keys block dispatches the confirmation too");
 }
 
+// Keys that take the keyboard into the panel: the keys block hands each to panel.js (checked there), and a layout with no Mentions
+// page says so instead of doing nothing.
+async function checkPanelKeys() {
+  const f = fixture(), seen = [];
+  const send = keysBlock(f, { toggleEnter: page => (seen.push(["toggle", page]), page === "mentions" && !f.noMentions), leavePanel: () => seen.push(["leave"]), stepSurface: n => seen.push(["step", n]) });
+  await send("mentions"); await send("panel-next"); await send("panel-prev"); await send("panel-close");
+  assert.deepEqual(seen, [["toggle", "mentions"], ["step", 1], ["step", -1], ["leave"]]);
+  f.noMentions = true; const before = f.notifications.length;
+  await send("mentions");
+  assert.equal(f.notifications.length, before + 1, "no Mentions page: the person is told");
+  assert.equal(f.notifications.at(-1).title, "Mentions unavailable");
+  const keys = require("../../keys.json");
+  for (const section of ["mod:t3-files", "mod:review", "mod:mentions"]) {
+    assert.deepEqual([keys[section]["ctrl-tab"], keys[section]["ctrl-shift-tab"]], ["t3-tabs.panel-next", "t3-tabs.panel-prev"], `${section}: Ctrl+Tab steps the panel's tabs while it has the keyboard`);
+  }
+  assert.equal(keys["layout:herdr-t3"]["ctrl-tab"], "t3-tabs.tab-next", "outside the panel Ctrl+Tab still steps the terminal tabs");
+  assert.equal(keys["layout:herdr-t3"]["cmd-1"], "t3-tabs.tab:1");
+}
+
 // An agent's menu acts on the agent it names (specs/tab-bar.md). At Home every agent is in the background: its Settle and
 // Snooze still happen, nothing moves, and Undo jumps only to an agent that was in view when it was put away.
 async function checkMenuAtHome() {
@@ -1785,7 +1804,7 @@ async function checkPruningAndLinearScans() {
 }
 
 (async () => {
-  const additions = { bookmarks: checkBookmarks, cleanup: checkCleanup, dispatch: checkCleanupDispatch, menu: checkMenuAtHome, unread: checkUnread, details: checkDetailsKey, missingFolder: checkNewTabMissingFolder, pruningAndLinear: checkPruningAndLinearScans };
+  const additions = { bookmarks: checkBookmarks, cleanup: checkCleanup, dispatch: checkCleanupDispatch, panelKeys: checkPanelKeys, menu: checkMenuAtHome, unread: checkUnread, details: checkDetailsKey, missingFolder: checkNewTabMissingFolder, pruningAndLinear: checkPruningAndLinearScans };
   if (process.argv[2]) { await additions[process.argv[2]](); return; }
   for (const verify of Object.values(additions)) await verify();
   await check();

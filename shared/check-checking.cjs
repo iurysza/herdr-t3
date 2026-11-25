@@ -21,7 +21,7 @@ async function check(checking) {
     readTextFile: async () => '{"titlebar":"none","traffic_lights":[16,12]}',
     writeTextFile: async (...args) => effects.push(["write", ...args]), notify() {},
     reviewRepo: async () => { effects.push(["review"]); return {}; },
-    setShared() {},
+    setShared() {}, watchPanelFocus() {},
     workFolder: () => "/repo", spaces: () => [{ id: "s", active: true }],
     stopsInit(v) { v.fs = {}; }, navOpen: () => true, nextCommand: () => new Promise(() => {}),
     InputState: { new: () => ({ on() {}, focus() {} }) },

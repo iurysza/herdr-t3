@@ -25,6 +25,7 @@ import { setReviewed, headerPress, diffView, hbars, foldMenu } from "./diff.js";
 import { analysisStatus, statusPanel, head, header } from "./header.js";
 import { reviewKey } from "./keys.js";
 import { wrapLines } from "./store.js";
+import { watchPanelFocus } from "./panel-focus.js";
 import { initMenu, closeMenu, menuView, closeMenus } from "./menus.js";
 import { installedTargets } from "./open-in.js";
 
@@ -67,6 +68,7 @@ export default class ReviewPanel extends View {
     // The colors the rows on screen are in.
     this.colorsKey = JSON.stringify(colors(theme()));
     this.handle = cx.focus_handle();
+    if (!checking()) watchPanelFocus(this, "review", cx, () => this.handle);
     // Whether the file tree's column is open: the page's, for every space.
     this.navOpen = navOpen();
     // Under NAV_NARROW, the tree shown apart from that preference, for this run only; unset, it follows the preference.

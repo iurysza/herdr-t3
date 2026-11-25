@@ -157,19 +157,27 @@
     "cmd-w": "t3-files.close",
     "ctrl-alt-shift-x": "t3-files.close",
     "cmd-shift-w": "t3-files.close:menu",
-    "ctrl-alt-x": "t3-files.close:menu"
+    "ctrl-alt-x": "t3-files.close:menu",
+    "ctrl-tab": "t3-tabs.panel-next",
+    "ctrl-shift-tab": "t3-tabs.panel-prev"
   },
   "mod:review": {
     "cmd-t": "t3-chrome.surface-menu",
     "cmd-w": "review.close",
     "ctrl-alt-shift-x": "review.close",
     "cmd-shift-w": "review.close:menu",
-    "ctrl-alt-x": "review.close:menu"
+    "ctrl-alt-x": "review.close:menu",
+    "ctrl-tab": "t3-tabs.panel-next",
+    "ctrl-shift-tab": "t3-tabs.panel-prev"
   },
   "mod:asciicn-wallpaper": {
     "cmd-w": "overlay.close",
     "ctrl-alt-shift-x": "overlay.close",
     "cmd-shift-w": "overlay.close",
     "ctrl-alt-x": "overlay.close"
+  },
+  "mod:mentions": {
+    "ctrl-tab": "t3-tabs.panel-next",
+    "ctrl-shift-tab": "t3-tabs.panel-prev"
   }
 }

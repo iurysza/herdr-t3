@@ -75,6 +75,7 @@ The layout's bindings live in the `layout:herdr-t3` section of `keys.json` and a
 | `cmd-alt-b` | `t3-tabs.panel` | Shows the space panel on the page last shown, or hides it |
 | `cmd-shift-g` | `t3-tabs.review` | Opens the panel on Review, or closes it if it's already showing Review. Only with the Review extra |
 | `cmd-shift-e` | `t3-tabs.files` | Opens the panel on Files, or closes it if it's already showing Files |
+| `ctrl-tab` / `ctrl-shift-tab` in Files, Review or Mentions | `t3-tabs.panel-next` / `t3-tabs.panel-prev` | The next or previous panel tab, going around; it takes the keyboard so the next press goes on from there |
 | `cmd-w`, `ctrl-alt-shift-x` in Files or Review | `t3-files.close`, `review.close` | Close the active panel tab, not the terminal |
 | `cmd-t` in Files or Review | `t3-chrome.surface-menu` | Open + under it; F / R add Files / Review |
 | `cmd-t`, `ctrl-alt-c` with terminal focus | `t3-tabs.new` | New terminal tab |

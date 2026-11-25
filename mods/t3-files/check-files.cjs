@@ -88,7 +88,7 @@ function makePage({ page = "files", spaces = [space("s1", "/r", true)], panes = 
     localStorage: { getItem: (k) => store.has(k) ? store.get(k) : null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) },
     Date: clock, Promise, Math, Number, String, Boolean, Map, Set, Object, Array, JSON, RegExp, Error, Uint8Array,
   });
-  const files = ["store.js", "focus.js", "trigger.js", "tip.js", "list.js", "menu-row.js", "terminal-context.js", "surfaces.js", "panel.js", "open-in.js", "pierre-icons-data.js", "pierre-icons.js", "file-tree.js", "file-listing.js", "nav-column.js", "submenu.js", "popup-menu.js", "panel-states.js", "model.js", "menus.js", "main.js"];
+  const files = ["store.js", "focus.js", "trigger.js", "tip.js", "list.js", "menu-row.js", "terminal-context.js", "surfaces.js", "panel.js", "panel-focus.js", "open-in.js", "pierre-icons-data.js", "pierre-icons.js", "file-tree.js", "file-listing.js", "nav-column.js", "submenu.js", "popup-menu.js", "panel-states.js", "model.js", "menus.js", "main.js"];
   const buttons = load("color.js") + "\nconst { drawButton, split, ghostButton, tint, DISABLED, GROUP_GAP } = (() => {\n" + load("button.js") + "\nreturn { drawButton: button, split, ghostButton, tint, DISABLED, GROUP_GAP };\n})();\n";
   vm.runInContext((buttons + files.map(load).join("\n")).replace("export default class", "globalThis.Mod = class"), ctx);
   const send = (c) => { if (wake) { const x = wake; wake = null; x(c); } else commands.push(c); };
@@ -884,6 +884,28 @@ async function closeKeys() {
   assert.equal(shared["t3.panels"].s1.active, null, "the tab close key still closes the surface with no menu");
 }
 
+// ⌘2 from Mentions, ⌃Tab or a pick there asks the panel for Files' keyboard (panel-focus.js): its own timer takes it once Files is in
+// front, the tree for the generic page, never while another page shows, and without Files being drawn.
+async function panelFocus() {
+  const { view, cx, w, settle, tick, show, shared, ctx } = makePage();
+  shared["t3.panels"] = { s1: { open: true, tabs: [{ id: "files", born: 1 }], active: "files" } };
+  view.render(cx); await settle();
+  const ask = (n, slot = "files") => { shared["t3.panelFocus"] = { slot, n, at: ctx.Date.now() }; };
+  const before = w.focusCalls;
+  show("mentions"); ask(1); await tick();
+  assert.equal(w.focusCalls, before, "behind Mentions it waits");
+  show("files"); await tick();
+  assert.equal(w.focusCalls, before + 1, "in front it takes the keyboard, with no draw in between");
+  assert.equal(w.focused, view.treeHandle, "the generic Files' tree");
+  await tick();
+  assert.equal(w.focusCalls, before + 1, "once per request");
+  ask(2, "mentions"); await tick();
+  assert.equal(w.focusCalls, before + 1, "another page's request is none of its business");
+  // A file in front: the page's own handle.
+  const st = view.current(); st.file = "a.js"; ask(3); await tick();
+  assert.equal(w.focused, view.handle, "a file has the page");
+}
+
 async function surfaceCache() {
   const { view, cx, w, settle, fire, send, tick } = makePage();
   view.render(cx); await settle(); await fire(0);
@@ -1458,6 +1480,7 @@ async function editorStyleRefresh() {
   await dragRows();
   await resources();
   await closeKeys();
+  await panelFocus();
   await surfaceCache();
   await firstPreviewFrame();
   await treeLoadingDelay();

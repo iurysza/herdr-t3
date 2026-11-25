@@ -86,6 +86,8 @@ Review 的树菜单也是本 mod 的原生 popup，复用 `shared/menus.js`：�
 
 Files 的树按 space 共用，文件阅读位置按标签实例只记本次运行；每个 space 仅最近显示的三个文件标签保留预览和 Editor，更早标签从顶部重读；关闭立即释放。加上页级最近三个 space 的边界（见文末），最多九个文件 Editor。
 
+`t3.panelFocus`、`t3.panelReturn` 不进 `KEY`，像 `review.shown` 一样只在 `shared/panel.js` 命名一次（`PANEL_FOCUS`、`PANEL_RETURN`）。`t3.panelFocus` 是 `{ slot, n, at }`：`panel.js` 的 `askPanelFocus` 写（⌘2 的 `enterPanel`、⌃Tab 的 `stepSurface`，以及 Mentions 打开 Files 时它自己写），`slot` 是页面槽（`files`、`review`、`mentions`），`n` 每次比上一次大，`at` 是写入时刻。对应页面的 mod 在 `init` 里调 `shared/panel-focus.js` 的 `watchPanelFocus`，用 100 ms 定时器查：请求属于它、不超过 1.5 秒、页面已在前台时才取键盘，每个 `n` 取一次（取不到就下个 tick 再试）。不用命令也不靠渲染：隐藏的副本收不到命令，写请求或再次显示时也不一定重绘，只有定时器照常跑。`t3.panelReturn` 是 `{ pane, tab }`：进入面板前持有键盘的终端窗格，`leavePanel` 收起面板后据此把键盘还回去，窗格已不在时改给该标签里第一个终端窗格。
+
 `review.shown[space]` 存 `{ root, page, base, label, born? }`，`label` 是 Review 范围按钮的字（提交读到后为标题），供详情的 Review 行照写；`born` 是写它的 Review 标签实例（`panel.js` 的 `surfaceBorn`，Herdr 自带 stack 里没有）。Review、详情、Review 栏经 `reviewShown(space)` 只认当前标签的记录。`review` 请求 `{ space, root, page, base?, n, analyze, born? }` 只由 `panel.js` 的 `reviewRequest` 写，同样只会被对应的标签接手；详情与独立栏经 [`openReview`](specs/space-panel.md#which-repository-review-reads) 先显示、再发请求。Review 的内存副本按实例号驱逐，迟到读取失效。
 
 详情记的各 space 仓库根（`review-details.js` 的 `roots`）只留本次运行，供新菜单确认仓库前显示。详情与独立 Review 栏的来源只随任务和 popup props 传递，不持久化；本机机器名在详情弹层启动时读取。

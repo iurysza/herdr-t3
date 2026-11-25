@@ -15,6 +15,7 @@ import { installedTargets, knownTargets, targetIcon, openInHeight } from "./open
 import { split, ghostButton, tint, GROUP_GAP } from "./button.js";
 import { loadingState, noticeBar } from "./panel-states.js";
 import { stopsInit, stopsEnd, enter, focusRoot, stop, within } from "./focus.js";
+import { watchPanelFocus } from "./panel-focus.js";
 import { opener, popupOpen, hang } from "./trigger.js";
 import { tip, hoverKept, glow } from "./tip.js";
 import { MENU_ROW } from "./menu-row.js";
@@ -75,6 +76,8 @@ export default class Files extends View {
     this.search = InputState.new({ placeholder: "Search files" });
     this.search.on("change", (_e, cx) => { const st = this.current(); if (st && this.search.value() !== st.query) this.find(st, this.search.value(), cx); });
     this.handle = cx.focus_handle();
+    // ⌘2 from Mentions, ⌃Tab or a pick there asks the panel for this page's keyboard: a file has the page, the generic Files its tree.
+    if (!checking()) watchPanelFocus(this, "files", cx, () => this.current()?.file ? this.handle : this.treeHandle);
     this.fs = /** @type {any} */ (null);
     this.treeHot = null;
     this.listHeight = {};
